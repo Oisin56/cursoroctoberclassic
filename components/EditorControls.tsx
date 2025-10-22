@@ -33,7 +33,7 @@ export function EditorControls({ isEditor, onLock, onRelease }: EditorControlsPr
           onClick={onLock}
         >
           <Lock className="h-4 w-4 mr-2" />
-          I'm the Scorer
+          I&apos;m the Scorer
         </Button>
       )}
     </div>

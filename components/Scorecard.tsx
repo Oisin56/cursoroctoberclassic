@@ -20,9 +20,7 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
   const [optimisticScores, setOptimisticScores] = useState<Record<string, Score>>({});
   
   const course = round.course;
-  if (!course) return <div>Loading course data...</div>;
-
-  const holes = course.holes;
+  const holes = course?.holes || [];
   const isNineHole = holes.length === 9;
 
   // Debounced save function
@@ -41,6 +39,8 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
     }, 300),
     []
   );
+  
+  if (!course) return <div>Loading course data...</div>;
 
   const getPlayerScore = (player: string): Score => {
     const existing = scores.find(s => s.player === player);

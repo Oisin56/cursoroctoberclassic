@@ -23,21 +23,10 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('leaderboard');
   const [showPinModal, setShowPinModal] = useState(false);
   const [seeding, setSeeding] = useState(false);
-  const [allScores, setAllScores] = useState<any[]>([]);
 
   const { isEditor, loading: authLoading, claimLock, releaseLock } = useEditorLock(EVENT_ID);
   const { event, loading: eventLoading } = useEvent(EVENT_ID);
   const { rounds, loading: roundsLoading } = useRounds(EVENT_ID);
-
-  // Fetch all scores for all rounds
-  useEffect(() => {
-    const scores: any[] = [];
-    rounds.forEach(round => {
-      const { scores: roundScores } = useScores(round.id);
-      scores.push(...roundScores);
-    });
-    setAllScores(scores);
-  }, [rounds]);
 
   const handleSeedDatabase = async () => {
     if (!isEditor) {
@@ -90,7 +79,7 @@ export default function Home() {
               variant="default"
               className="w-full"
             >
-              I'm the Scorer
+              I&apos;m the Scorer
             </Button>
           </div>
           {isEditor && (
@@ -242,29 +231,6 @@ function LeaderboardTab({
   rounds: any[];
   isEditor: boolean;
 }) {
-  // Collect all scores from all rounds
-  const [allScores, setAllScores] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    const fetchAllScores = async () => {
-      const scoresPromises = rounds.map(round => {
-        return new Promise<any[]>((resolve) => {
-          const { scores } = useScores(round.id);
-          resolve(scores);
-        });
-      });
-
-      // Since we can't use useScores in a loop properly, we'll need a different approach
-      // For now, let's just pass what we have
-      setLoading(false);
-    };
-    
-    fetchAllScores();
-  }, [rounds]);
-
-  // Simplified: fetch scores using a component that uses the hook
   return <LeaderboardWithScores event={event} rounds={rounds} isEditor={isEditor} />;
 }
 
