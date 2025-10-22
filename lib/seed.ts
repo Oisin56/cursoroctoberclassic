@@ -5,7 +5,7 @@ import { roundsData } from './data/rounds';
 
 const EVENT_ID = 'october-classic-2025';
 
-export async function seedDatabase(players: string[]) {
+export async function seedDatabase(players: string[] = ['Oisin', 'Neil']) {
   try {
     // Create event
     const eventRef = doc(db, 'events', EVENT_ID);

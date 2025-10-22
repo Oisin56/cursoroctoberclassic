@@ -35,13 +35,13 @@ export default function Home() {
     }
 
     const confirmed = confirm(
-      'Are you sure you want to seed the database? This will create the event, courses, and rounds. Players: Oisin, Neil, Brendan, Stevie'
+      'Are you sure you want to seed the database? This will create the event, courses, and rounds. Players: Oisin, Neil'
     );
 
     if (!confirmed) return;
 
     setSeeding(true);
-    const result = await seedDatabase(['Oisin', 'Neil', 'Brendan', 'Stevie']);
+    const result = await seedDatabase(['Oisin', 'Neil']);
     setSeeding(false);
 
     if (result.success) {
