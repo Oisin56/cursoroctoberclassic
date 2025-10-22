@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Round, Score, HoleScore } from '@/lib/types';
+import { Round, Score, HoleScore, Hole } from '@/lib/types';
 import { Input } from './ui/Input';
 import { debounce } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -55,6 +55,7 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
       id: `${round.id}_${player}`,
       roundId: round.id,
       player,
+      handicap: 0,
       holes: {},
       birdies: 0,
       eagles: 0,
@@ -64,17 +65,89 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
     };
   };
 
-  const updateHoleScore = (player: string, holeNum: number, field: keyof HoleScore, value: any) => {
+  const calculateStablefordPoints = (strokes: number, par: number, handicapStrokes: number): number => {
+    const netScore = strokes - handicapStrokes;
+    const diff = netScore - par;
+    
+    if (diff <= -3) return 5; // Albatross or better
+    if (diff === -2) return 4; // Eagle
+    if (diff === -1) return 3; // Birdie
+    if (diff === 0) return 2;  // Par
+    if (diff === 1) return 1;  // Bogey
+    return 0; // Double bogey or worse
+  };
+
+  const getHandicapStrokes = (handicap: number, strokeIndex: number): number => {
+    const fullStrokes = Math.floor(handicap / 18);
+    const extraStrokes = handicap % 18;
+    return fullStrokes + (strokeIndex <= extraStrokes ? 1 : 0);
+  };
+
+  const updateHandicap = (player: string, handicap: number) => {
+    if (!isEditor) return;
+
+    const currentScore = getPlayerScore(player);
+    const updatedScore: Score = {
+      ...currentScore,
+      handicap: handicap || 0,
+    };
+
+    // Recalculate all Stableford points for existing holes
+    Object.keys(updatedScore.holes).forEach(holeKey => {
+      const holeNum = parseInt(holeKey);
+      const hole = holes.find(h => h.number === holeNum);
+      if (hole && updatedScore.holes[holeKey].strokes) {
+        const handicapStrokes = getHandicapStrokes(handicap || 0, hole.strokeIndex);
+        updatedScore.holes[holeKey].points = calculateStablefordPoints(
+          updatedScore.holes[holeKey].strokes!,
+          hole.par,
+          handicapStrokes
+        );
+      }
+    });
+
+    // Recalculate birdies/eagles
+    const { birdies, eagles } = calculateBirdiesEagles(updatedScore, holes);
+    updatedScore.birdies = birdies;
+    updatedScore.eagles = eagles;
+
+    setOptimisticScores(prev => ({
+      ...prev,
+      [player]: updatedScore,
+    }));
+
+    debouncedSave(updatedScore.id, updatedScore);
+  };
+
+  const updateHoleScore = (player: string, holeNum: number, strokes: number | '') => {
     if (!isEditor) return;
 
     const currentScore = getPlayerScore(player);
     const holeKey = holeNum.toString();
+    const hole = holes.find(h => h.number === holeNum);
+    
+    if (!hole) return;
+
     const currentHole = currentScore.holes[holeKey] || {};
     
-    const updatedHole = {
-      ...currentHole,
-      [field]: value === '' ? undefined : value,
-    };
+    let updatedHole: HoleScore;
+    
+    if (strokes === '') {
+      updatedHole = {
+        ...currentHole,
+        strokes: undefined,
+        points: undefined,
+      };
+    } else {
+      const handicapStrokes = getHandicapStrokes(currentScore.handicap || 0, hole.strokeIndex);
+      const points = calculateStablefordPoints(strokes, hole.par, handicapStrokes);
+      
+      updatedHole = {
+        ...currentHole,
+        strokes: strokes,
+        points: points,
+      };
+    }
 
     const updatedScore: Score = {
       ...currentScore,
@@ -88,6 +161,34 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
     const { birdies, eagles } = calculateBirdiesEagles(updatedScore, holes);
     updatedScore.birdies = birdies;
     updatedScore.eagles = eagles;
+
+    setOptimisticScores(prev => ({
+      ...prev,
+      [player]: updatedScore,
+    }));
+
+    debouncedSave(updatedScore.id, updatedScore);
+  };
+
+  const updateGIR = (player: string, holeNum: number, gir: boolean) => {
+    if (!isEditor) return;
+
+    const currentScore = getPlayerScore(player);
+    const holeKey = holeNum.toString();
+    const currentHole = currentScore.holes[holeKey] || {};
+    
+    const updatedHole = {
+      ...currentHole,
+      gir: gir,
+    };
+
+    const updatedScore: Score = {
+      ...currentScore,
+      holes: {
+        ...currentScore.holes,
+        [holeKey]: updatedHole,
+      },
+    };
 
     setOptimisticScores(prev => ({
       ...prev,
@@ -123,6 +224,33 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
         <div className="mt-2 flex gap-4 text-sm">
           <span className="text-primary font-medium">{round.label}</span>
           <span className="text-muted-foreground">Format: {round.format}</span>
+          <span className="text-muted-foreground">White Tees</span>
+        </div>
+      </div>
+
+      {/* Handicap Input */}
+      <div className="bg-secondary rounded-lg p-4 border border-border">
+        <h3 className="text-lg font-semibold mb-3">Player Handicaps</h3>
+        <div className="flex gap-6 flex-wrap">
+          {players.map(player => {
+            const playerScore = getPlayerScore(player);
+            return (
+              <div key={player} className="flex items-center gap-3">
+                <label className="font-medium min-w-[80px]">{player}:</label>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  max="54"
+                  value={playerScore.handicap || ''}
+                  onChange={(e) => updateHandicap(player, parseInt(e.target.value) || 0)}
+                  disabled={!isEditor}
+                  className="h-10 w-20 text-center"
+                  placeholder="H'cap"
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -136,7 +264,7 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
               <th className="p-2 text-center text-sm font-medium text-muted-foreground w-12">SI</th>
               <th className="p-2 text-center text-sm font-medium text-muted-foreground w-16">Yds</th>
               {players.map(player => (
-                <th key={player} className="p-2 text-center text-sm font-medium border-l border-border" colSpan={2}>
+                <th key={player} className="p-2 text-center text-sm font-medium border-l border-border" colSpan={3}>
                   {player}
                 </th>
               ))}
@@ -145,8 +273,11 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
               <th colSpan={4}></th>
               {players.map(player => (
                 <>
-                  <th key={`${player}-score`} className="p-2 text-center text-xs text-muted-foreground border-l border-border">
-                    {round.format === 'Stableford' ? 'Pts' : 'Score'}
+                  <th key={`${player}-strokes`} className="p-2 text-center text-xs text-muted-foreground border-l border-border">
+                    Strokes
+                  </th>
+                  <th key={`${player}-pts`} className="p-2 text-center text-xs text-muted-foreground">
+                    Pts
                   </th>
                   <th key={`${player}-gir`} className="p-2 text-center text-xs text-muted-foreground">
                     GIR
@@ -174,32 +305,34 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
                   {players.map(player => {
                     const playerScore = getPlayerScore(player);
                     const holeScore = playerScore.holes[hole.number.toString()] || {};
+                    const handicapStrokes = getHandicapStrokes(playerScore.handicap || 0, hole.strokeIndex);
                     
                     return (
                       <>
-                        <td key={`${player}-${hole.number}-score`} className="p-1 border-l border-border">
+                        <td key={`${player}-${hole.number}-strokes`} className="p-1 border-l border-border">
                           <Input
                             type="number"
                             inputMode="numeric"
                             min="1"
                             max="15"
-                            value={round.format === 'Stableford' ? (holeScore.points || '') : (holeScore.strokes || '')}
+                            value={holeScore.strokes || ''}
                             onChange={(e) => {
                               const val = e.target.value ? parseInt(e.target.value) : '';
-                              updateHoleScore(
-                                player,
-                                hole.number,
-                                round.format === 'Stableford' ? 'points' : 'strokes',
-                                val
-                              );
+                              updateHoleScore(player, hole.number, val as number | '');
                             }}
                             disabled={!isEditor}
                             className="h-9 w-14 text-center p-1 bg-background"
                           />
+                          {handicapStrokes > 0 && (
+                            <div className="text-xs text-center text-primary mt-0.5">+{handicapStrokes}</div>
+                          )}
+                        </td>
+                        <td key={`${player}-${hole.number}-pts`} className="p-2 text-center font-semibold text-accent">
+                          {holeScore.points !== undefined ? holeScore.points : '-'}
                         </td>
                         <td key={`${player}-${hole.number}-gir`} className="p-1">
                           <button
-                            onClick={() => updateHoleScore(player, hole.number, 'gir', !holeScore.gir)}
+                            onClick={() => updateGIR(player, hole.number, !holeScore.gir)}
                             disabled={!isEditor}
                             className={`h-9 w-9 rounded flex items-center justify-center transition ${
                               holeScore.gir
@@ -224,13 +357,17 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
               <td colSpan={2}></td>
               {players.map(player => {
                 const playerScore = getPlayerScore(player);
-                const total = calculateTotal(playerScore, holes, round.format);
+                const strokeTotal = calculateStrokeTotal(playerScore, holes);
+                const pointsTotal = calculatePointsTotal(playerScore, holes);
                 const girCount = Object.values(playerScore.holes).filter(h => h.gir).length;
                 
                 return (
                   <>
-                    <td key={`${player}-total`} className="p-2 text-center border-l border-border">
-                      {total || '-'}
+                    <td key={`${player}-stroke-total`} className="p-2 text-center border-l border-border">
+                      {strokeTotal || '-'}
+                    </td>
+                    <td key={`${player}-pts-total`} className="p-2 text-center text-accent">
+                      {pointsTotal || '-'}
                     </td>
                     <td key={`${player}-gir-total`} className="p-2 text-center">
                       {girCount || '-'}
@@ -311,15 +448,15 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
   );
 }
 
-function calculateTotal(score: Score, holes: any[], format: string): number {
-  if (format === 'Stableford') {
-    return Object.values(score.holes).reduce((sum, h) => sum + (h.points || 0), 0);
-  } else {
-    return Object.values(score.holes).reduce((sum, h) => sum + (h.strokes || 0), 0);
-  }
+function calculateStrokeTotal(score: Score, holes: Hole[]): number {
+  return Object.values(score.holes).reduce((sum, h) => sum + (h.strokes || 0), 0);
 }
 
-function calculateBirdiesEagles(score: Score, holes: any[]): { birdies: number; eagles: number } {
+function calculatePointsTotal(score: Score, holes: Hole[]): number {
+  return Object.values(score.holes).reduce((sum, h) => sum + (h.points || 0), 0);
+}
+
+function calculateBirdiesEagles(score: Score, holes: Hole[]): { birdies: number; eagles: number } {
   let birdies = 0;
   let eagles = 0;
 
@@ -336,4 +473,3 @@ function calculateBirdiesEagles(score: Score, holes: any[]): { birdies: number; 
 
   return { birdies, eagles };
 }
-

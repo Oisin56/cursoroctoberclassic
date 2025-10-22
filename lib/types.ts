@@ -52,6 +52,7 @@ export interface Score {
   id: string;
   roundId: string;
   player: string;
+  handicap: number;
   holes: Record<string, HoleScore>;
   birdies: number;
   eagles: number;
