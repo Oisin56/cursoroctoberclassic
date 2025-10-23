@@ -286,7 +286,6 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
         const cleanedHole: any = { number: mergedHole.number };
         if (mergedHole.par !== undefined) cleanedHole.par = mergedHole.par;
         if (mergedHole.strokeIndex !== undefined) cleanedHole.strokeIndex = mergedHole.strokeIndex;
-        if (mergedHole.yardage !== undefined) cleanedHole.yardage = mergedHole.yardage;
         if (mergedHole.isLdHole !== undefined) cleanedHole.isLdHole = mergedHole.isLdHole;
         if (mergedHole.isCttpHole !== undefined) cleanedHole.isCttpHole = mergedHole.isCttpHole;
         
