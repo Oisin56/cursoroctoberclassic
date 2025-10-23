@@ -40,6 +40,7 @@ export interface Round {
   ldHoles: number[];
   cttpHoles: number[];
   matchplayWinner?: string | null; // For matchplay rounds
+  submitted?: boolean; // Whether scores are final and count toward leaderboard
   course?: Course; // Joined data
 }
 

@@ -162,8 +162,11 @@ function calculateLeaderboard(
     };
   });
 
-  // Process each round
+  // Process each round (only submitted rounds count toward leaderboard)
   rounds.forEach(round => {
+    // Skip rounds that haven't been submitted
+    if (!round.submitted) return;
+    
     const roundScores = allScores.filter(s => s.roundId === round.id);
     if (roundScores.length === 0) return;
 

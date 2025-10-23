@@ -230,6 +230,41 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
     }
   };
 
+  const updateHoleData = async (holeNum: number, field: 'par' | 'strokeIndex', value: number) => {
+    if (!isEditor || !course) return;
+
+    try {
+      const courseRef = doc(db, 'courses', course.id);
+      const updatedHoles = course.holes.map(h => 
+        h.number === holeNum ? { ...h, [field]: value } : h
+      );
+      
+      await setDoc(courseRef, {
+        holes: updatedHoles,
+      }, { merge: true });
+      
+      toast.success('Course data updated');
+    } catch (error) {
+      console.error('Error updating course:', error);
+      toast.error('Failed to update course data');
+    }
+  };
+
+  const submitCard = async () => {
+    if (!isEditor) return;
+
+    try {
+      const roundRef = doc(db, 'rounds', round.id);
+      await setDoc(roundRef, {
+        submitted: true,
+      }, { merge: true });
+      toast.success('Card submitted! Points now count toward leaderboard.');
+    } catch (error) {
+      console.error('Error submitting card:', error);
+      toast.error('Failed to submit card');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Course Header */}
@@ -314,8 +349,36 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
                     {isLD && <span className="text-xs text-primary ml-1">LD</span>}
                     {isCTTP && <span className="text-xs text-accent ml-1">CP</span>}
                   </td>
-                  <td className="p-2 text-center text-sm">{hole.par}</td>
-                  <td className="p-2 text-center text-sm text-muted-foreground">{hole.strokeIndex}</td>
+                  <td className="p-1 text-center">
+                    {isEditor ? (
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min="3"
+                        max="6"
+                        value={hole.par}
+                        onChange={(e) => updateHoleData(hole.number, 'par', parseInt(e.target.value) || 3)}
+                        className="h-9 w-14 text-center p-1 bg-background"
+                      />
+                    ) : (
+                      <span className="text-sm">{hole.par}</span>
+                    )}
+                  </td>
+                  <td className="p-1 text-center">
+                    {isEditor ? (
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min="1"
+                        max="18"
+                        value={hole.strokeIndex}
+                        onChange={(e) => updateHoleData(hole.number, 'strokeIndex', parseInt(e.target.value) || 1)}
+                        className="h-9 w-14 text-center p-1 bg-background text-muted-foreground"
+                      />
+                    ) : (
+                      <span className="text-sm text-muted-foreground">{hole.strokeIndex}</span>
+                    )}
+                  </td>
                   <td className="p-2 text-center text-sm text-muted-foreground">{hole.yardage}</td>
                   {players.map(player => {
                     const playerScore = getPlayerScore(player);
@@ -495,6 +558,40 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
               Winner: <strong>{round.matchplayWinner}</strong> (+10 points)
             </p>
           )}
+        </div>
+      )}
+
+      {/* Submit Card Button */}
+      {isEditor && (
+        <div className="bg-secondary rounded-lg p-6 border border-border text-center">
+          {round.submitted ? (
+            <div className="flex items-center justify-center gap-3 text-accent">
+              <Check className="h-6 w-6" />
+              <span className="text-lg font-semibold">Card Submitted - Points Count Toward Leaderboard</span>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-muted-foreground">
+                Once you&apos;ve entered all scores and verified the course data, submit the card to include these scores in the leaderboard.
+              </p>
+              <button
+                onClick={submitCard}
+                className="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg hover:bg-primary/90 transition"
+              >
+                Submit Card
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* View-only indicator */}
+      {!isEditor && round.submitted && (
+        <div className="bg-accent/10 rounded-lg p-4 border border-accent text-center">
+          <div className="flex items-center justify-center gap-3 text-accent">
+            <Check className="h-5 w-5" />
+            <span className="font-medium">This card has been submitted and counts toward the leaderboard</span>
+          </div>
         </div>
       )}
     </div>
