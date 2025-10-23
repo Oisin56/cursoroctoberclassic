@@ -72,6 +72,17 @@ export function Leaderboard({ event, rounds, allScores, isEditor }: LeaderboardP
         </div>
       </div>
 
+      {/* Special Thanks Message */}
+      <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 rounded-lg p-6 border border-pink-500/20">
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground italic">
+            Neil and Oisin would like to thank their loving wives, Jordan and Victoria,
+            for their unwavering support and encouragement throughout their golfing careers. 
+            <span className="ml-2">❤️⛳</span>
+          </p>
+        </div>
+      </div>
+
       {/* Leaderboard Table */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-secondary rounded-lg">
@@ -199,7 +210,7 @@ export function Leaderboard({ event, rounds, allScores, isEditor }: LeaderboardP
         <h3 className="text-2xl font-bold mb-4 text-primary">About The October Classic</h3>
         <p className="text-muted-foreground mb-4">
           The October Classic is an annual links golf tournament played each October, marking the culmination of the golf season. 
-          This prestigious event takes competitors on a journey through Ireland&apos;s finest links courses over five unforgettable days.
+          This prestigious event takes competitors on a journey through Ireland&apos;s finest links courses over four unforgettable days.
         </p>
 
         <h4 className="text-lg font-semibold mb-3 mt-6">Scoring System Explained</h4>

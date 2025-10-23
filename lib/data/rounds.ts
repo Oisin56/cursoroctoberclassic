@@ -31,7 +31,7 @@ export const roundsData: Omit<Round, 'id'>[] = [
     sequence: 4,
     label: 'D2 PM',
     date: 'October 24, 2025',
-    format: 'Stableford',
+    format: 'Matchplay',
   },
   {
     eventId: 'october-classic-2025',
@@ -51,18 +51,10 @@ export const roundsData: Omit<Round, 'id'>[] = [
   },
   {
     eventId: 'october-classic-2025',
-    courseId: 'galway',
+    courseId: 'mount-juliet',
     sequence: 7,
     label: 'D4',
     date: 'October 26, 2025',
-    format: 'Matchplay',
-  },
-  {
-    eventId: 'october-classic-2025',
-    courseId: 'mount-juliet',
-    sequence: 8,
-    label: 'D5',
-    date: 'October 27, 2025',
     format: 'Strokeplay',
   },
 ];
