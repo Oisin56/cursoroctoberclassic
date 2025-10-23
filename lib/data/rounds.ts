@@ -7,8 +7,6 @@ export const roundsData: Omit<Round, 'id'>[] = [
     sequence: 1,
     label: 'D1 AM',
     format: 'Strokeplay',
-    ldHoles: [4, 18],
-    cttpHoles: [3, 14],
   },
   {
     eventId: 'october-classic-2025',
@@ -16,8 +14,6 @@ export const roundsData: Omit<Round, 'id'>[] = [
     sequence: 2,
     label: 'D1 PM',
     format: 'Strokeplay',
-    ldHoles: [5, 12],
-    cttpHoles: [4, 17],
   },
   {
     eventId: 'october-classic-2025',
@@ -25,8 +21,6 @@ export const roundsData: Omit<Round, 'id'>[] = [
     sequence: 3,
     label: 'D2 AM',
     format: 'Stableford',
-    ldHoles: [2, 6],
-    cttpHoles: [3, 13],
   },
   {
     eventId: 'october-classic-2025',
@@ -34,8 +28,6 @@ export const roundsData: Omit<Round, 'id'>[] = [
     sequence: 4,
     label: 'D2 PM',
     format: 'Stableford',
-    ldHoles: [4, 15],
-    cttpHoles: [7, 17],
   },
   {
     eventId: 'october-classic-2025',
@@ -43,8 +35,6 @@ export const roundsData: Omit<Round, 'id'>[] = [
     sequence: 5,
     label: 'D3 AM',
     format: 'Strokeplay',
-    ldHoles: [5],
-    cttpHoles: [2, 6],
   },
   {
     eventId: 'october-classic-2025',
@@ -52,17 +42,13 @@ export const roundsData: Omit<Round, 'id'>[] = [
     sequence: 6,
     label: 'D3 PM',
     format: 'Strokeplay',
-    ldHoles: [5, 15],
-    cttpHoles: [4, 13],
   },
   {
     eventId: 'october-classic-2025',
-    courseId: 'galway-salthill',
+    courseId: 'galway',
     sequence: 7,
     label: 'D4',
     format: 'Matchplay',
-    ldHoles: [2, 9],
-    cttpHoles: [4, 12],
   },
   {
     eventId: 'october-classic-2025',
@@ -70,8 +56,5 @@ export const roundsData: Omit<Round, 'id'>[] = [
     sequence: 8,
     label: 'D5',
     format: 'Strokeplay',
-    ldHoles: [3, 18],
-    cttpHoles: [4, 11],
   },
 ];
-

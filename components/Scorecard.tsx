@@ -65,7 +65,9 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
     };
   };
 
-  const calculateStablefordPoints = (strokes: number, par: number, handicapStrokes: number): number => {
+  const calculateStablefordPoints = (strokes: number, par: number | undefined, handicapStrokes: number): number => {
+    if (!par) return 0; // Can't calculate without par
+    
     const netScore = strokes - handicapStrokes;
     const diff = netScore - par;
     
@@ -77,7 +79,9 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
     return 0; // Double bogey or worse
   };
 
-  const getHandicapStrokes = (handicap: number, strokeIndex: number): number => {
+  const getHandicapStrokes = (handicap: number, strokeIndex: number | undefined): number => {
+    if (!strokeIndex) return 0; // Can't calculate without SI
+    
     const fullStrokes = Math.floor(handicap / 18);
     const extraStrokes = handicap % 18;
     return fullStrokes + (strokeIndex <= extraStrokes ? 1 : 0);
@@ -230,13 +234,13 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
     }
   };
 
-  const updateHoleData = async (holeNum: number, field: 'par' | 'strokeIndex', value: number) => {
+  const updateHoleData = async (holeNum: number, updates: Partial<Hole>) => {
     if (!isEditor || !course) return;
 
     try {
       const courseRef = doc(db, 'courses', course.id);
       const updatedHoles = course.holes.map(h => 
-        h.number === holeNum ? { ...h, [field]: value } : h
+        h.number === holeNum ? { ...h, ...updates } : h
       );
       
       await setDoc(courseRef, {
@@ -274,7 +278,7 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
         <div className="mt-2 flex gap-4 text-sm">
           <span className="text-primary font-medium">{round.label}</span>
           <span className="text-muted-foreground">Format: {round.format}</span>
-          <span className="text-muted-foreground">White Tees</span>
+          {round.submitted && <span className="text-accent">✓ Submitted</span>}
         </div>
       </div>
 
@@ -312,7 +316,7 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
               <th className="p-2 text-left text-sm font-medium text-muted-foreground w-12">Hole</th>
               <th className="p-2 text-center text-sm font-medium text-muted-foreground w-12">Par</th>
               <th className="p-2 text-center text-sm font-medium text-muted-foreground w-12">SI</th>
-              <th className="p-2 text-center text-sm font-medium text-muted-foreground w-16">Yds</th>
+              <th className="p-2 text-center text-sm font-medium text-muted-foreground w-16">LD/CP</th>
               {players.map(player => (
                 <th key={player} className="p-2 text-center text-sm font-medium border-l border-border" colSpan={3}>
                   {player}
@@ -338,16 +342,10 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
           </thead>
           <tbody>
             {holes.map((hole, idx) => {
-              const isLD = round.ldHoles.includes(hole.number);
-              const isCTTP = round.cttpHoles.includes(hole.number);
-              const rowBg = isLD || isCTTP ? 'bg-primary/5' : '';
-              
               return (
-                <tr key={hole.number} className={`border-b border-border/50 ${rowBg}`}>
+                <tr key={hole.number} className="border-b border-border/50">
                   <td className="p-2 text-center font-medium">
                     {hole.number}
-                    {isLD && <span className="text-xs text-primary ml-1">LD</span>}
-                    {isCTTP && <span className="text-xs text-accent ml-1">CP</span>}
                   </td>
                   <td className="p-1 text-center">
                     {isEditor ? (
@@ -356,12 +354,13 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
                         inputMode="numeric"
                         min="3"
                         max="6"
-                        value={hole.par}
-                        onChange={(e) => updateHoleData(hole.number, 'par', parseInt(e.target.value) || 3)}
+                        value={hole.par || ''}
+                        onChange={(e) => updateHoleData(hole.number, { par: parseInt(e.target.value) || undefined })}
                         className="h-9 w-14 text-center p-1 bg-background"
+                        placeholder="Par"
                       />
                     ) : (
-                      <span className="text-sm">{hole.par}</span>
+                      <span className="text-sm">{hole.par || '-'}</span>
                     )}
                   </td>
                   <td className="p-1 text-center">
@@ -371,15 +370,46 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
                         inputMode="numeric"
                         min="1"
                         max="18"
-                        value={hole.strokeIndex}
-                        onChange={(e) => updateHoleData(hole.number, 'strokeIndex', parseInt(e.target.value) || 1)}
+                        value={hole.strokeIndex || ''}
+                        onChange={(e) => updateHoleData(hole.number, { strokeIndex: parseInt(e.target.value) || undefined })}
                         className="h-9 w-14 text-center p-1 bg-background text-muted-foreground"
+                        placeholder="SI"
                       />
                     ) : (
-                      <span className="text-sm text-muted-foreground">{hole.strokeIndex}</span>
+                      <span className="text-sm text-muted-foreground">{hole.strokeIndex || '-'}</span>
                     )}
                   </td>
-                  <td className="p-2 text-center text-sm text-muted-foreground">{hole.yardage}</td>
+                  <td className="p-1 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      {/* Show LD checkbox for Par 5s */}
+                      {hole.par === 5 && (
+                        <label className="flex items-center gap-1 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={hole.isLdHole || false}
+                            onChange={(e) => updateHoleData(hole.number, { isLdHole: e.target.checked })}
+                            disabled={!isEditor}
+                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                          />
+                          <span className="text-xs text-primary">LD</span>
+                        </label>
+                      )}
+                      {/* Show CTTP checkbox for Par 3s */}
+                      {hole.par === 3 && (
+                        <label className="flex items-center gap-1 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={hole.isCttpHole || false}
+                            onChange={(e) => updateHoleData(hole.number, { isCttpHole: e.target.checked })}
+                            disabled={!isEditor}
+                            className="h-4 w-4 rounded border-border text-accent focus:ring-accent cursor-pointer"
+                          />
+                          <span className="text-xs text-accent">CP</span>
+                        </label>
+                      )}
+                      {hole.par !== 3 && hole.par !== 5 && <span className="text-muted-foreground text-xs">-</span>}
+                    </div>
+                  </td>
                   {players.map(player => {
                     const playerScore = getPlayerScore(player);
                     const holeScore = playerScore.holes[hole.number.toString()] || {};
@@ -431,7 +461,7 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
             {/* Totals Row */}
             <tr className="bg-primary/10 font-semibold">
               <td className="p-2 text-left">Total</td>
-              <td className="p-2 text-center">{holes.reduce((sum, h) => sum + h.par, 0)}</td>
+              <td className="p-2 text-center">{holes.reduce((sum, h) => sum + (h.par || 0), 0) || '-'}</td>
               <td colSpan={2}></td>
               {players.map(player => {
                 const playerScore = getPlayerScore(player);
@@ -463,6 +493,10 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
         {/* LD & CTTP Points */}
         <div className="bg-secondary rounded-lg p-4 border border-border">
           <h3 className="text-lg font-semibold mb-3">Side Games</h3>
+          <p className="text-xs text-muted-foreground mb-3">
+            Tick LD boxes on Par 5s and CP boxes on Par 3s in the scorecard above to mark side game holes. 
+            Then award points here for winners.
+          </p>
           <div className="space-y-3">
             {players.map(player => {
               const playerScore = getPlayerScore(player);
@@ -614,7 +648,7 @@ function calculateBirdiesEagles(score: Score, holes: Hole[]): { birdies: number;
     if (!holeScore.strokes) return;
     
     const hole = holes.find(h => h.number === parseInt(holeNum));
-    if (!hole) return;
+    if (!hole || !hole.par) return; // Need par to calculate
 
     const diff = holeScore.strokes - hole.par;
     if (diff === -1) birdies++;

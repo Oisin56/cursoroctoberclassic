@@ -2,9 +2,10 @@ import { Timestamp } from 'firebase/firestore';
 
 export interface Hole {
   number: number;
-  par: number;
-  strokeIndex: number;
-  yardage: number;
+  par?: number; // Optional - user fills in
+  strokeIndex?: number; // Optional - user fills in
+  isCttpHole?: boolean; // Checkbox for Par 3s
+  isLdHole?: boolean; // Checkbox for Par 5s
 }
 
 export interface Course {
@@ -37,8 +38,6 @@ export interface Round {
   sequence: number;
   label: string;
   format: RoundFormat;
-  ldHoles: number[];
-  cttpHoles: number[];
   matchplayWinner?: string | null; // For matchplay rounds
   submitted?: boolean; // Whether scores are final and count toward leaderboard
   course?: Course; // Joined data
