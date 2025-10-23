@@ -23,13 +23,33 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
   const holes = course?.holes || [];
   const isNineHole = holes.length === 9;
 
+  // Helper to clean undefined values from objects
+  const cleanObject = (obj: any): any => {
+    if (Array.isArray(obj)) {
+      return obj.map(cleanObject);
+    }
+    if (obj !== null && typeof obj === 'object') {
+      const cleaned: any = {};
+      Object.keys(obj).forEach(key => {
+        if (obj[key] !== undefined) {
+          cleaned[key] = cleanObject(obj[key]);
+        }
+      });
+      return cleaned;
+    }
+    return obj;
+  };
+
   // Debounced save function
   const debouncedSave = useCallback(
     debounce(async (scoreId: string, data: Partial<Score>) => {
       try {
+        // Clean undefined values to prevent Firestore errors
+        const cleanedData = cleanObject(data);
+        
         const scoreRef = doc(db, 'scores', scoreId);
         await setDoc(scoreRef, {
-          ...data,
+          ...cleanedData,
           updatedAt: serverTimestamp(),
         }, { merge: true });
       } catch (error) {
@@ -250,10 +270,9 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
         holes: updatedHoles,
       });
       
-      console.log('Updated hole data:', { holeNum, updates, updatedHoles });
-      toast.success('Course data updated');
+      console.log('✅ Saved to Firestore - Hole', holeNum, updates);
     } catch (error) {
-      console.error('Error updating course:', error);
+      console.error('❌ Error updating course:', error);
       toast.error('Failed to update course data');
     }
   };
