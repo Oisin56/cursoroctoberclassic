@@ -38,24 +38,11 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
   const [editMode, setEditMode] = useState(false);
   const [optimisticScores, setOptimisticScores] = useState<Record<string, Score>>({});
   
-  // Show traditional scorecard if submitted and not in edit mode
-  if (round.submitted && !editMode) {
-    return (
-      <TraditionalScorecard
-        round={round}
-        scores={scores}
-        players={players}
-        isEditor={isEditor}
-        onEdit={() => setEditMode(true)}
-      />
-    );
-  }
-  
   const course = round.course;
   const holes = course?.holes || [];
   const isNineHole = holes.length === 9;
 
-  // Debounced save function
+  // Debounced save function - must be before conditional return
   const debouncedSave = useMemo(
     () =>
       debounce(async (scoreId: string, data: Partial<Score>) => {
@@ -75,6 +62,19 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
       }, 300),
     []
   );
+  
+  // Show traditional scorecard if submitted and not in edit mode
+  if (round.submitted && !editMode) {
+    return (
+      <TraditionalScorecard
+        round={round}
+        scores={scores}
+        players={players}
+        isEditor={isEditor}
+        onEdit={() => setEditMode(true)}
+      />
+    );
+  }
   
   if (!course) return <div>Loading course data...</div>;
 
