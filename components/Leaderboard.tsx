@@ -219,11 +219,11 @@ export function Leaderboard({ event, rounds, allScores, isEditor }: LeaderboardP
             </div>
             <div className="flex justify-between border-b border-border pb-2">
               <span className="text-muted-foreground">Longest Drive (per hole)</span>
-              <span className="font-semibold text-primary">Variable</span>
+              <span className="font-semibold text-primary">+1 point</span>
             </div>
             <div className="flex justify-between border-b border-border pb-2">
               <span className="text-muted-foreground">Closest to Pin (per hole)</span>
-              <span className="font-semibold text-accent">Variable</span>
+              <span className="font-semibold text-accent">+1 point</span>
             </div>
           </div>
           <div className="space-y-2">
@@ -250,8 +250,9 @@ export function Leaderboard({ event, rounds, allScores, isEditor }: LeaderboardP
           <h5 className="font-semibold mb-2">Format Details</h5>
           <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
             <li>Rounds feature mix of Strokeplay, Stableford, and Matchplay formats</li>
-            <li>Front 9 / Back 9 winners determined by lowest gross score</li>
-            <li>Round winners determined by format (lowest score or highest points)</li>
+            <li>Front 9 / Back 9 winners determined by the same format as the round</li>
+            <li>LD and CTTP apply to pre-selected holes (marked on scorecard)</li>
+            <li>Each LD or CTTP win adds +1 point to player&apos;s total</li>
             <li>GIR (Greens in Regulation) tracked across all rounds</li>
             <li>Handicap drop calculated after Narin/Portnoo and Mt Juliet rounds</li>
             <li>Scores only count toward leaderboard once submitted by scorer</li>
@@ -299,7 +300,7 @@ function calculateLeaderboard(
     const course = round.course;
     if (!course) return;
 
-    // Calculate front9 and back9 winners
+    // Calculate front9 and back9 winners based on round format
     const front9Totals: Record<string, number> = {};
     const back9Totals: Record<string, number> = {};
 
@@ -309,12 +310,23 @@ function calculateLeaderboard(
 
       Object.entries(score.holes).forEach(([holeNum, holeScore]) => {
         const num = parseInt(holeNum);
-        const strokes = holeScore.strokes || 0;
         
-        if (num <= 9) {
-          front9 += strokes;
+        // Use appropriate scoring based on format
+        if (round.format === 'Stableford') {
+          const points = holeScore.points || 0;
+          if (num <= 9) {
+            front9 += points;
+          } else {
+            back9 += points;
+          }
         } else {
-          back9 += strokes;
+          // Strokeplay and Matchplay use strokes
+          const strokes = holeScore.strokes || 0;
+          if (num <= 9) {
+            front9 += strokes;
+          } else {
+            back9 += strokes;
+          }
         }
       });
 
@@ -322,28 +334,58 @@ function calculateLeaderboard(
       back9Totals[score.player] = back9;
     });
 
-    // Award front9 winner (lowest for stroke play, handle ties)
-    const front9Winner = Object.entries(front9Totals)
-      .filter(([_, total]) => total > 0)
-      .sort((a, b) => a[1] - b[1])[0];
-    if (front9Winner && front9Totals[front9Winner[0]] > 0) {
-      const lowestFront9 = front9Winner[1];
-      const winners = Object.entries(front9Totals).filter(([_, t]) => t === lowestFront9);
-      if (winners.length === 1) {
-        entries[front9Winner[0]].front9Wins++;
+    // Award front9 winner based on format
+    if (round.format === 'Stableford') {
+      // Stableford: highest points wins
+      const front9Winner = Object.entries(front9Totals)
+        .filter(([_, total]) => total > 0)
+        .sort((a, b) => b[1] - a[1])[0]; // Descending for points
+      if (front9Winner && front9Totals[front9Winner[0]] > 0) {
+        const highestFront9 = front9Winner[1];
+        const winners = Object.entries(front9Totals).filter(([_, t]) => t === highestFront9);
+        if (winners.length === 1) {
+          entries[front9Winner[0]].front9Wins++;
+        }
+      }
+    } else {
+      // Strokeplay/Matchplay: lowest strokes wins
+      const front9Winner = Object.entries(front9Totals)
+        .filter(([_, total]) => total > 0)
+        .sort((a, b) => a[1] - b[1])[0]; // Ascending for strokes
+      if (front9Winner && front9Totals[front9Winner[0]] > 0) {
+        const lowestFront9 = front9Winner[1];
+        const winners = Object.entries(front9Totals).filter(([_, t]) => t === lowestFront9);
+        if (winners.length === 1) {
+          entries[front9Winner[0]].front9Wins++;
+        }
       }
     }
 
-    // Award back9 winner (only for 18-hole rounds)
+    // Award back9 winner (only for 18-hole rounds) based on format
     if (course.holes.length === 18) {
-      const back9Winner = Object.entries(back9Totals)
-        .filter(([_, total]) => total > 0)
-        .sort((a, b) => a[1] - b[1])[0];
-      if (back9Winner && back9Totals[back9Winner[0]] > 0) {
-        const lowestBack9 = back9Winner[1];
-        const winners = Object.entries(back9Totals).filter(([_, t]) => t === lowestBack9);
-        if (winners.length === 1) {
-          entries[back9Winner[0]].back9Wins++;
+      if (round.format === 'Stableford') {
+        // Stableford: highest points wins
+        const back9Winner = Object.entries(back9Totals)
+          .filter(([_, total]) => total > 0)
+          .sort((a, b) => b[1] - a[1])[0]; // Descending for points
+        if (back9Winner && back9Totals[back9Winner[0]] > 0) {
+          const highestBack9 = back9Winner[1];
+          const winners = Object.entries(back9Totals).filter(([_, t]) => t === highestBack9);
+          if (winners.length === 1) {
+            entries[back9Winner[0]].back9Wins++;
+          }
+        }
+      } else {
+        // Strokeplay/Matchplay: lowest strokes wins
+        const back9Winner = Object.entries(back9Totals)
+          .filter(([_, total]) => total > 0)
+          .sort((a, b) => a[1] - b[1])[0]; // Ascending for strokes
+        if (back9Winner && back9Totals[back9Winner[0]] > 0) {
+          const lowestBack9 = back9Winner[1];
+          const winners = Object.entries(back9Totals).filter(([_, t]) => t === lowestBack9);
+          if (winners.length === 1) {
+            entries[back9Winner[0]].back9Wins++;
+          }
         }
       }
     }
