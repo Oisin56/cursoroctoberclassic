@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Round, Score, HoleScore, Hole } from '@/lib/types';
@@ -16,6 +16,23 @@ interface ScorecardProps {
   players: string[];
   isEditor: boolean;
 }
+
+// Helper to clean undefined values from objects
+const cleanObject = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    return obj.map(cleanObject);
+  }
+  if (obj !== null && typeof obj === 'object') {
+    const cleaned: any = {};
+    Object.keys(obj).forEach(key => {
+      if (obj[key] !== undefined) {
+        cleaned[key] = cleanObject(obj[key]);
+      }
+    });
+    return cleaned;
+  }
+  return obj;
+};
 
 export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) {
   const [editMode, setEditMode] = useState(false);
@@ -38,40 +55,24 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
   const holes = course?.holes || [];
   const isNineHole = holes.length === 9;
 
-  // Helper to clean undefined values from objects
-  const cleanObject = (obj: any): any => {
-    if (Array.isArray(obj)) {
-      return obj.map(cleanObject);
-    }
-    if (obj !== null && typeof obj === 'object') {
-      const cleaned: any = {};
-      Object.keys(obj).forEach(key => {
-        if (obj[key] !== undefined) {
-          cleaned[key] = cleanObject(obj[key]);
-        }
-      });
-      return cleaned;
-    }
-    return obj;
-  };
-
   // Debounced save function
-  const debouncedSave = useCallback(
-    debounce(async (scoreId: string, data: Partial<Score>) => {
-      try {
-        // Clean undefined values to prevent Firestore errors
-        const cleanedData = cleanObject(data);
-        
-        const scoreRef = doc(db, 'scores', scoreId);
-        await setDoc(scoreRef, {
-          ...cleanedData,
-          updatedAt: serverTimestamp(),
-        }, { merge: true });
-      } catch (error) {
-        console.error('Error saving score:', error);
-        toast.error('Failed to save');
-      }
-    }, 300),
+  const debouncedSave = useMemo(
+    () =>
+      debounce(async (scoreId: string, data: Partial<Score>) => {
+        try {
+          // Clean undefined values to prevent Firestore errors
+          const cleanedData = cleanObject(data);
+          
+          const scoreRef = doc(db, 'scores', scoreId);
+          await setDoc(scoreRef, {
+            ...cleanedData,
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+        } catch (error) {
+          console.error('Error saving score:', error);
+          toast.error('Failed to save');
+        }
+      }, 300),
     []
   );
   

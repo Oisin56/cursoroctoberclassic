@@ -88,8 +88,8 @@ export function Leaderboard({ event, rounds, allScores, isEditor }: LeaderboardP
               <th className="p-3 text-center font-medium text-sm">Eagles<br/><span className="text-xs text-muted-foreground">(5 ea)</span></th>
               <th className="p-3 text-center font-medium text-sm">GIR<br/><span className="text-xs text-muted-foreground">(count)</span></th>
               <th className="p-3 text-center font-medium text-sm">GIR Bonus<br/><span className="text-xs text-muted-foreground">(manual)</span></th>
-              <th className="p-3 text-center font-medium text-sm">H'cap Drop<br/><span className="text-xs text-muted-foreground">(display)</span></th>
-              <th className="p-3 text-center font-medium text-sm">H'cap Bonus<br/><span className="text-xs text-muted-foreground">(manual)</span></th>
+              <th className="p-3 text-center font-medium text-sm">H&apos;cap Drop<br/><span className="text-xs text-muted-foreground">(display)</span></th>
+              <th className="p-3 text-center font-medium text-sm">H&apos;cap Bonus<br/><span className="text-xs text-muted-foreground">(manual)</span></th>
               <th className="p-3 text-right font-bold text-lg">Total</th>
             </tr>
           </thead>

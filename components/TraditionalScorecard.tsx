@@ -176,7 +176,7 @@ export function TraditionalScorecard({ round, scores, players, onEdit, isEditor 
             const playerScore = getPlayerScore(player);
             return (
               <div key={player} className="flex items-center gap-2">
-                <span className="font-semibold">{player} H'cap:</span>
+                <span className="font-semibold">{player} H&apos;cap:</span>
                 <span className="font-mono">{playerScore?.handicap || 0}</span>
               </div>
             );
