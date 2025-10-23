@@ -275,9 +275,23 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
 
     try {
       const courseRef = doc(db, 'courses', course.id);
-      const updatedHoles = course.holes.map(h => 
-        h.number === holeNum ? { ...h, ...updates } : h
-      );
+      
+      const updatedHoles = course.holes.map(h => {
+        if (h.number !== holeNum) return h;
+        
+        // Merge updates with existing hole
+        const mergedHole = { ...h, ...updates };
+        
+        // Remove undefined fields (user deleted them)
+        const cleanedHole: any = { number: mergedHole.number };
+        if (mergedHole.par !== undefined) cleanedHole.par = mergedHole.par;
+        if (mergedHole.strokeIndex !== undefined) cleanedHole.strokeIndex = mergedHole.strokeIndex;
+        if (mergedHole.yardage !== undefined) cleanedHole.yardage = mergedHole.yardage;
+        if (mergedHole.isLdHole !== undefined) cleanedHole.isLdHole = mergedHole.isLdHole;
+        if (mergedHole.isCttpHole !== undefined) cleanedHole.isCttpHole = mergedHole.isCttpHole;
+        
+        return cleanedHole;
+      });
       
       // Update entire document to ensure nested array updates work
       await setDoc(courseRef, {
@@ -289,7 +303,7 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
       console.log('✅ Saved to Firestore - Hole', holeNum, updates);
     } catch (error) {
       console.error('❌ Error updating course:', error);
-      toast.error('Failed to update course data');
+      toast.error('Failed to update data');
     }
   };
 
