@@ -68,7 +68,8 @@ export function Leaderboard({ event, rounds, allScores, isEditor }: LeaderboardP
               <th className="p-3 text-center font-medium text-sm">CTTP</th>
               <th className="p-3 text-center font-medium text-sm">Birdies<br/><span className="text-xs text-muted-foreground">(1 ea)</span></th>
               <th className="p-3 text-center font-medium text-sm">Eagles<br/><span className="text-xs text-muted-foreground">(5 ea)</span></th>
-              <th className="p-3 text-center font-medium text-sm">GIR<br/><span className="text-xs text-muted-foreground">(10)</span></th>
+              <th className="p-3 text-center font-medium text-sm">GIR<br/><span className="text-xs text-muted-foreground">(count)</span></th>
+              <th className="p-3 text-center font-medium text-sm">GIR Bonus<br/><span className="text-xs text-muted-foreground">(manual)</span></th>
               <th className="p-3 text-right font-bold text-lg">Total</th>
             </tr>
           </thead>
@@ -94,7 +95,8 @@ export function Leaderboard({ event, rounds, allScores, isEditor }: LeaderboardP
                 <td className="p-3 text-center text-accent">{entry.cttpPoints}</td>
                 <td className="p-3 text-center">{entry.birdies}</td>
                 <td className="p-3 text-center">{entry.eagles * 5}</td>
-                <td className="p-3 text-center">{entry.girBonus}</td>
+                <td className="p-3 text-center text-muted-foreground">{entry.girCount}</td>
+                <td className="p-3 text-center text-accent">{entry.girBonus > 0 ? '+10' : '-'}</td>
                 <td className="p-3 text-right text-xl font-bold text-primary">{entry.total}</td>
               </tr>
             ))}
@@ -157,6 +159,7 @@ function calculateLeaderboard(
       cttpPoints: 0,
       birdies: 0,
       eagles: 0,
+      girCount: 0, // Cumulative GIR count across all rounds
       girBonus: 0,
       total: 0,
     };
@@ -251,12 +254,16 @@ function calculateLeaderboard(
       }
     }
 
-    // Accumulate side games and birdies/eagles
+    // Accumulate side games, birdies/eagles, and GIR count
     roundScores.forEach(score => {
       entries[score.player].ldPoints += score.ldPoints || 0;
       entries[score.player].cttpPoints += score.cttpPoints || 0;
       entries[score.player].birdies += score.birdies || 0;
       entries[score.player].eagles += score.eagles || 0;
+      
+      // Count total GIRs across all holes in this round
+      const girCount = Object.values(score.holes).filter(h => h.gir).length;
+      entries[score.player].girCount += girCount;
     });
   });
 

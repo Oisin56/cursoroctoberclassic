@@ -292,6 +292,21 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
     }
   };
 
+  const unsubmitCard = async () => {
+    if (!isEditor) return;
+
+    try {
+      const roundRef = doc(db, 'rounds', round.id);
+      await setDoc(roundRef, {
+        submitted: false,
+      }, { merge: true });
+      toast.success('Card reopened for editing.');
+    } catch (error) {
+      console.error('Error unsubmitting card:', error);
+      toast.error('Failed to reopen card');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Course Header */}
@@ -371,32 +386,48 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
                     {hole.number}
                   </td>
                   <td className="p-1 text-center">
-                    {isEditor ? (
+                    {isEditor && !round.submitted ? (
                       <Input
-                        type="number"
+                        type="text"
                         inputMode="numeric"
-                        min="3"
-                        max="6"
                         value={hole.par || ''}
-                        onChange={(e) => updateHoleData(hole.number, { par: parseInt(e.target.value) || undefined })}
-                        className="h-9 w-14 text-center p-1 bg-background"
-                        placeholder="Par"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '') {
+                            updateHoleData(hole.number, { par: undefined });
+                          } else {
+                            const num = parseInt(val);
+                            if (num >= 3 && num <= 6) {
+                              updateHoleData(hole.number, { par: num });
+                            }
+                          }
+                        }}
+                        className="h-10 w-16 text-center p-1 bg-background text-base font-medium"
+                        placeholder="-"
                       />
                     ) : (
-                      <span className="text-sm">{hole.par || '-'}</span>
+                      <span className="text-sm font-medium">{hole.par || '-'}</span>
                     )}
                   </td>
                   <td className="p-1 text-center">
-                    {isEditor ? (
+                    {isEditor && !round.submitted ? (
                       <Input
-                        type="number"
+                        type="text"
                         inputMode="numeric"
-                        min="1"
-                        max="18"
                         value={hole.strokeIndex || ''}
-                        onChange={(e) => updateHoleData(hole.number, { strokeIndex: parseInt(e.target.value) || undefined })}
-                        className="h-9 w-14 text-center p-1 bg-background text-muted-foreground"
-                        placeholder="SI"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '') {
+                            updateHoleData(hole.number, { strokeIndex: undefined });
+                          } else {
+                            const num = parseInt(val);
+                            if (num >= 1 && num <= 18) {
+                              updateHoleData(hole.number, { strokeIndex: num });
+                            }
+                          }
+                        }}
+                        className="h-10 w-16 text-center p-1 bg-background text-muted-foreground text-base"
+                        placeholder="-"
                       />
                     ) : (
                       <span className="text-sm text-muted-foreground">{hole.strokeIndex || '-'}</span>
@@ -442,17 +473,23 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
                       <>
                         <td key={`${player}-${hole.number}-strokes`} className="p-1 border-l border-border">
                           <Input
-                            type="number"
+                            type="text"
                             inputMode="numeric"
-                            min="1"
-                            max="15"
                             value={holeScore.strokes || ''}
                             onChange={(e) => {
-                              const val = e.target.value ? parseInt(e.target.value) : '';
-                              updateHoleScore(player, hole.number, val as number | '');
+                              const val = e.target.value;
+                              if (val === '') {
+                                updateHoleScore(player, hole.number, '');
+                              } else {
+                                const num = parseInt(val);
+                                if (num >= 1 && num <= 15) {
+                                  updateHoleScore(player, hole.number, num);
+                                }
+                              }
                             }}
                             disabled={!isEditor}
-                            className="h-9 w-14 text-center p-1 bg-background"
+                            className="h-10 w-16 text-center p-1 bg-background text-base font-semibold touch-manipulation"
+                            placeholder="-"
                           />
                           {handicapStrokes > 0 && (
                             <div className="text-xs text-center text-primary mt-0.5">+{handicapStrokes}</div>
@@ -620,20 +657,33 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
 
       {/* Submit Card Button */}
       {isEditor && (
-        <div className="bg-secondary rounded-lg p-6 border border-border text-center">
+        <div className="bg-secondary rounded-lg p-6 border border-border">
           {round.submitted ? (
-            <div className="flex items-center justify-center gap-3 text-accent">
-              <Check className="h-6 w-6" />
-              <span className="text-lg font-semibold">Card Submitted - Points Count Toward Leaderboard</span>
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-3 text-accent">
+                <Check className="h-6 w-6" />
+                <span className="text-lg font-semibold">Card Submitted - Counts Toward Leaderboard</span>
+              </div>
+              <div className="text-center">
+                <button
+                  onClick={unsubmitCard}
+                  className="px-6 py-3 bg-background border-2 border-primary text-primary rounded-lg font-semibold hover:bg-primary hover:text-primary-foreground transition"
+                >
+                  Edit Card
+                </button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Reopens card for editing (will temporarily remove from leaderboard)
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 text-center">
               <p className="text-muted-foreground">
                 Once you&apos;ve entered all scores and verified the course data, submit the card to include these scores in the leaderboard.
               </p>
               <button
                 onClick={submitCard}
-                className="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg hover:bg-primary/90 transition"
+                className="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg hover:bg-primary/90 transition touch-manipulation"
               >
                 Submit Card
               </button>

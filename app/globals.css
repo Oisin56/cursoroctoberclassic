@@ -35,5 +35,39 @@
   .tap-target {
     @apply min-h-[44px] min-w-[44px];
   }
+  
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+  
+  /* Prevent zoom on input focus in iOS */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  textarea {
+    font-size: 16px !important;
+  }
+  
+  /* Better scrolling */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Sticky table headers */
+  .overflow-x-auto table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: hsl(var(--secondary));
+  }
 }
 

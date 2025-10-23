@@ -71,7 +71,8 @@ export interface LeaderboardEntry {
   cttpPoints: number;
   birdies: number;
   eagles: number;
-  girBonus: number;
+  girCount: number; // Total GIR across all rounds (for display only)
+  girBonus: number; // Manual 10 points awarded to winner
   total: number;
 }
 
