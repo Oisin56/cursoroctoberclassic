@@ -313,8 +313,9 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
       <div className="bg-secondary rounded-lg p-4 border border-border">
         <h2 className="text-2xl font-bold">{course.name}</h2>
         <p className="text-muted-foreground">{course.location}</p>
-        <div className="mt-2 flex gap-4 text-sm">
+        <div className="mt-2 flex flex-wrap gap-4 text-sm">
           <span className="text-primary font-medium">{round.label}</span>
+          <span className="text-muted-foreground">{round.date}</span>
           <span className="text-muted-foreground">Format: {round.format}</span>
           {round.submitted && <span className="text-accent">✓ Submitted</span>}
         </div>

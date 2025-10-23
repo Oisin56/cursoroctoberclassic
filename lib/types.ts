@@ -20,7 +20,9 @@ export interface Event {
   name: string;
   year: number;
   players: string[];
+  startingHandicaps: Record<string, number>; // Player name -> starting handicap
   girOverallWinner: string | null;
+  handicapDropWinner: string | null; // Winner of biggest handicap drop (Narin/Portnoo + Mt Juliet)
   createdAt: Timestamp;
 }
 
@@ -37,6 +39,7 @@ export interface Round {
   courseId: string;
   sequence: number;
   label: string;
+  date: string; // e.g., "October 23, 2025"
   format: RoundFormat;
   matchplayWinner?: string | null; // For matchplay rounds
   submitted?: boolean; // Whether scores are final and count toward leaderboard
@@ -73,6 +76,8 @@ export interface LeaderboardEntry {
   eagles: number;
   girCount: number; // Total GIR across all rounds (for display only)
   girBonus: number; // Manual 10 points awarded to winner
+  handicapDrop: number; // Handicap drop after Narin/Portnoo + Mt Juliet (for display)
+  handicapDropBonus: number; // Manual 10 points awarded for biggest drop
   total: number;
 }
 

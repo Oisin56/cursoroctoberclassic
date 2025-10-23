@@ -143,7 +143,10 @@ export default function Home() {
                 isActive={activeTab === round.id}
                 onClick={() => setActiveTab(round.id)}
               >
-                {round.label}
+                <span className="flex items-center gap-1">
+                  {round.label}
+                  {round.submitted && <span className="text-accent text-xs">✓</span>}
+                </span>
               </TabsTrigger>
             ))}
           </TabsList>

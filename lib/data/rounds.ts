@@ -6,6 +6,7 @@ export const roundsData: Omit<Round, 'id'>[] = [
     courseId: 'ballyliffin-old',
     sequence: 1,
     label: 'D1 AM',
+    date: 'October 23, 2025',
     format: 'Strokeplay',
   },
   {
@@ -13,6 +14,7 @@ export const roundsData: Omit<Round, 'id'>[] = [
     courseId: 'ballyliffin-glashedy',
     sequence: 2,
     label: 'D1 PM',
+    date: 'October 23, 2025',
     format: 'Strokeplay',
   },
   {
@@ -20,6 +22,7 @@ export const roundsData: Omit<Round, 'id'>[] = [
     courseId: 'portsalon',
     sequence: 3,
     label: 'D2 AM',
+    date: 'October 24, 2025',
     format: 'Stableford',
   },
   {
@@ -27,6 +30,7 @@ export const roundsData: Omit<Round, 'id'>[] = [
     courseId: 'dunfanaghy',
     sequence: 4,
     label: 'D2 PM',
+    date: 'October 24, 2025',
     format: 'Stableford',
   },
   {
@@ -34,6 +38,7 @@ export const roundsData: Omit<Round, 'id'>[] = [
     courseId: 'cruit-island',
     sequence: 5,
     label: 'D3 AM',
+    date: 'October 25, 2025',
     format: 'Strokeplay',
   },
   {
@@ -41,6 +46,7 @@ export const roundsData: Omit<Round, 'id'>[] = [
     courseId: 'narin-portnoo',
     sequence: 6,
     label: 'D3 PM',
+    date: 'October 25, 2025',
     format: 'Strokeplay',
   },
   {
@@ -48,6 +54,7 @@ export const roundsData: Omit<Round, 'id'>[] = [
     courseId: 'galway',
     sequence: 7,
     label: 'D4',
+    date: 'October 26, 2025',
     format: 'Matchplay',
   },
   {
@@ -55,6 +62,7 @@ export const roundsData: Omit<Round, 'id'>[] = [
     courseId: 'mount-juliet',
     sequence: 8,
     label: 'D5',
+    date: 'October 27, 2025',
     format: 'Strokeplay',
   },
 ];

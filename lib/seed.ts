@@ -38,7 +38,12 @@ export async function seedDatabase(players: string[] = ['Oisin', 'Neil']) {
       name: 'The October Classic 2025',
       year: 2025,
       players,
+      startingHandicaps: {
+        'Neil': 11.0,
+        'Oisin': 11.2,
+      },
       girOverallWinner: null,
+      handicapDropWinner: null,
       createdAt: serverTimestamp(),
     });
 

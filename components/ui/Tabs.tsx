@@ -27,11 +27,13 @@ export function TabsList({ children, className }: TabsListProps) {
   return (
     <div
       className={cn(
-        'inline-flex h-11 items-center justify-center rounded-lg bg-secondary p-1',
-        'overflow-x-auto w-full',
+        'flex items-center rounded-lg bg-secondary p-1',
+        'overflow-x-auto scrollbar-hide w-full',
+        'gap-1 md:gap-0',
         className
       )}
       role="tablist"
+      style={{ WebkitOverflowScrolling: 'touch' }}
     >
       {children}
     </div>
@@ -54,7 +56,7 @@ export function TabsTrigger({ value, children, className, onClick, isActive }: T
         'text-sm font-medium ring-offset-background transition-all',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         'disabled:pointer-events-none disabled:opacity-50',
-        'tap-target',
+        'tap-target flex-shrink-0 min-w-[80px]',
         isActive
           ? 'bg-background text-foreground shadow-sm'
           : 'text-muted-foreground hover:text-foreground',

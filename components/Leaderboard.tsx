@@ -39,6 +39,24 @@ export function Leaderboard({ event, rounds, allScores, isEditor }: LeaderboardP
     }
   };
 
+  const setHandicapDropWinner = async (player: string) => {
+    if (!isEditor) return;
+    
+    setSavingGirWinner(true); // Reusing same state for simplicity
+    try {
+      const eventRef = doc(db, 'events', event.id);
+      await setDoc(eventRef, {
+        handicapDropWinner: player,
+      }, { merge: true });
+      toast.success(`${player} awarded Biggest Handicap Drop (+10 pts)`);
+    } catch (error) {
+      console.error('Error setting handicap drop winner:', error);
+      toast.error('Failed to set handicap drop winner');
+    } finally {
+      setSavingGirWinner(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -70,6 +88,8 @@ export function Leaderboard({ event, rounds, allScores, isEditor }: LeaderboardP
               <th className="p-3 text-center font-medium text-sm">Eagles<br/><span className="text-xs text-muted-foreground">(5 ea)</span></th>
               <th className="p-3 text-center font-medium text-sm">GIR<br/><span className="text-xs text-muted-foreground">(count)</span></th>
               <th className="p-3 text-center font-medium text-sm">GIR Bonus<br/><span className="text-xs text-muted-foreground">(manual)</span></th>
+              <th className="p-3 text-center font-medium text-sm">H'cap Drop<br/><span className="text-xs text-muted-foreground">(display)</span></th>
+              <th className="p-3 text-center font-medium text-sm">H'cap Bonus<br/><span className="text-xs text-muted-foreground">(manual)</span></th>
               <th className="p-3 text-right font-bold text-lg">Total</th>
             </tr>
           </thead>
@@ -97,6 +117,8 @@ export function Leaderboard({ event, rounds, allScores, isEditor }: LeaderboardP
                 <td className="p-3 text-center">{entry.eagles * 5}</td>
                 <td className="p-3 text-center text-muted-foreground">{entry.girCount}</td>
                 <td className="p-3 text-center text-accent">{entry.girBonus > 0 ? '+10' : '-'}</td>
+                <td className="p-3 text-center text-muted-foreground">{entry.handicapDrop > 0 ? entry.handicapDrop.toFixed(1) : '-'}</td>
+                <td className="p-3 text-center text-accent">{entry.handicapDropBonus > 0 ? '+10' : '-'}</td>
                 <td className="p-3 text-right text-xl font-bold text-primary">{entry.total}</td>
               </tr>
             ))}
@@ -137,6 +159,105 @@ export function Leaderboard({ event, rounds, allScores, isEditor }: LeaderboardP
           </div>
         </div>
       )}
+
+      {/* Handicap Drop Winner Selection */}
+      {isEditor && (
+        <div className="bg-secondary rounded-lg p-4 border border-border">
+          <h3 className="text-lg font-semibold mb-3">Biggest Handicap Drop Winner</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Award +10 points for biggest handicap drop after Narin/Portnoo and Mt Juliet rounds.
+            {event.handicapDropWinner && ` Current winner: ${event.handicapDropWinner}`}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {event.players.map(player => (
+              <Button
+                key={player}
+                variant={event.handicapDropWinner === player ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setHandicapDropWinner(player)}
+                disabled={savingGirWinner}
+              >
+                {player}
+              </Button>
+            ))}
+            {event.handicapDropWinner && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setHandicapDropWinner('')}
+                disabled={savingGirWinner}
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* October Classic Explanation */}
+      <div className="bg-secondary/50 rounded-lg p-6 border border-border/50">
+        <h3 className="text-2xl font-bold mb-4 text-primary">About The October Classic</h3>
+        <p className="text-muted-foreground mb-4">
+          The October Classic is an annual links golf tournament played each October, marking the culmination of the golf season. 
+          This prestigious event takes competitors on a journey through Ireland&apos;s finest links courses over five unforgettable days.
+        </p>
+
+        <h4 className="text-lg font-semibold mb-3 mt-6">Scoring System Explained</h4>
+        <div className="grid md:grid-cols-2 gap-4 text-sm">
+          <div className="space-y-2">
+            <div className="flex justify-between border-b border-border pb-2">
+              <span className="text-muted-foreground">Front 9 Winner (per round)</span>
+              <span className="font-semibold text-primary">+3 points</span>
+            </div>
+            <div className="flex justify-between border-b border-border pb-2">
+              <span className="text-muted-foreground">Back 9 Winner (per round)</span>
+              <span className="font-semibold text-primary">+3 points</span>
+            </div>
+            <div className="flex justify-between border-b border-border pb-2">
+              <span className="text-muted-foreground">Round Winner</span>
+              <span className="font-semibold text-primary">+10 points</span>
+            </div>
+            <div className="flex justify-between border-b border-border pb-2">
+              <span className="text-muted-foreground">Longest Drive (per hole)</span>
+              <span className="font-semibold text-primary">Variable</span>
+            </div>
+            <div className="flex justify-between border-b border-border pb-2">
+              <span className="text-muted-foreground">Closest to Pin (per hole)</span>
+              <span className="font-semibold text-accent">Variable</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between border-b border-border pb-2">
+              <span className="text-muted-foreground">Birdie (per hole)</span>
+              <span className="font-semibold">+1 point</span>
+            </div>
+            <div className="flex justify-between border-b border-border pb-2">
+              <span className="text-muted-foreground">Eagle (per hole)</span>
+              <span className="font-semibold">+5 points</span>
+            </div>
+            <div className="flex justify-between border-b border-border pb-2">
+              <span className="text-muted-foreground">Most GIRs (Overall)</span>
+              <span className="font-semibold text-accent">+10 points</span>
+            </div>
+            <div className="flex justify-between border-b border-border pb-2">
+              <span className="text-muted-foreground">Biggest Handicap Drop</span>
+              <span className="font-semibold text-accent">+10 points</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 p-4 bg-background/50 rounded-lg">
+          <h5 className="font-semibold mb-2">Format Details</h5>
+          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+            <li>Rounds feature mix of Strokeplay, Stableford, and Matchplay formats</li>
+            <li>Front 9 / Back 9 winners determined by lowest gross score</li>
+            <li>Round winners determined by format (lowest score or highest points)</li>
+            <li>GIR (Greens in Regulation) tracked across all rounds</li>
+            <li>Handicap drop calculated after Narin/Portnoo and Mt Juliet rounds</li>
+            <li>Scores only count toward leaderboard once submitted by scorer</li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
@@ -161,6 +282,8 @@ function calculateLeaderboard(
       eagles: 0,
       girCount: 0, // Cumulative GIR count across all rounds
       girBonus: 0,
+      handicapDrop: 0,
+      handicapDropBonus: 0,
       total: 0,
     };
   });
@@ -267,9 +390,30 @@ function calculateLeaderboard(
     });
   });
 
+  // Calculate handicap drops (Narin/Portnoo + Mt Juliet only)
+  const narinRound = rounds.find(r => r.course?.name === 'Narin & Portnoo Golf Club');
+  const mtJulietRound = rounds.find(r => r.course?.name === 'Mount Juliet Golf Club');
+  
+  if (narinRound && mtJulietRound && narinRound.submitted && mtJulietRound.submitted) {
+    event.players.forEach(player => {
+      const mtJulietScore = allScores.find(s => s.roundId === mtJulietRound.id && s.player === player);
+      const startingHandicap = event.startingHandicaps?.[player] || 0;
+      
+      if (mtJulietScore && mtJulietScore.handicap !== undefined) {
+        const drop = startingHandicap - mtJulietScore.handicap;
+        entries[player].handicapDrop = Math.max(0, drop); // Only show positive drops
+      }
+    });
+  }
+
   // Award GIR overall winner
   if (event.girOverallWinner) {
     entries[event.girOverallWinner].girBonus = 10;
+  }
+
+  // Award handicap drop winner
+  if (event.handicapDropWinner) {
+    entries[event.handicapDropWinner].handicapDropBonus = 10;
   }
 
   // Calculate totals
@@ -282,7 +426,8 @@ function calculateLeaderboard(
       entry.cttpPoints +
       entry.birdies +
       entry.eagles * 5 +
-      entry.girBonus;
+      entry.girBonus +
+      entry.handicapDropBonus;
   });
 
   // Sort by total descending
