@@ -66,7 +66,7 @@ async function exportDay1Data(): Promise<BackupData> {
     const day1RoundIds: string[] = [];
 
     for (const docSnap of roundsSnapshot.docs) {
-      const roundData = { id: docSnap.id, ...docSnap.data() };
+      const roundData = { id: docSnap.id, ...docSnap.data() } as any;
       
       // Look for D1 AM or D1 PM (old labels)
       if (roundData.label === 'D1 AM' || roundData.label === 'D1 PM') {
@@ -86,7 +86,7 @@ async function exportDay1Data(): Promise<BackupData> {
     const scoresSnapshot = await getDocs(collection(db, 'scores'));
     
     for (const docSnap of scoresSnapshot.docs) {
-      const scoreData = { id: docSnap.id, ...docSnap.data() };
+      const scoreData = { id: docSnap.id, ...docSnap.data() } as any;
       
       if (day1RoundIds.includes(scoreData.roundId)) {
         console.log(`✓ Found score: ${scoreData.player} - Round ${scoreData.roundId.substring(0, 8)}...`);
@@ -103,7 +103,7 @@ async function exportDay1Data(): Promise<BackupData> {
         );
         
         courseSnapshot.forEach(docSnap => {
-          const courseData = { id: docSnap.id, ...docSnap.data() };
+          const courseData = { id: docSnap.id, ...docSnap.data() } as any;
           console.log(`✓ Found course: ${courseData.name}`);
           backupData.courses.push(courseData);
         });
@@ -155,7 +155,7 @@ async function importDay1Data(backupData: BackupData): Promise<void> {
     const labelMapping: Record<string, string> = {};
 
     newRoundsSnapshot.forEach(docSnap => {
-      const roundData = docSnap.data();
+      const roundData = docSnap.data() as any;
       
       // Map old labels to new round IDs
       if (roundData.label === 'Day 1 AM') {
