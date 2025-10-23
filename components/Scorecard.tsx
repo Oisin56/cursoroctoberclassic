@@ -8,6 +8,7 @@ import { Input } from './ui/Input';
 import { debounce } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Check } from 'lucide-react';
+import { TraditionalScorecard } from './TraditionalScorecard';
 
 interface ScorecardProps {
   round: Round;
@@ -17,7 +18,21 @@ interface ScorecardProps {
 }
 
 export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) {
+  const [editMode, setEditMode] = useState(false);
   const [optimisticScores, setOptimisticScores] = useState<Record<string, Score>>({});
+  
+  // Show traditional scorecard if submitted and not in edit mode
+  if (round.submitted && !editMode) {
+    return (
+      <TraditionalScorecard
+        round={round}
+        scores={scores}
+        players={players}
+        isEditor={isEditor}
+        onEdit={() => setEditMode(true)}
+      />
+    );
+  }
   
   const course = round.course;
   const holes = course?.holes || [];
@@ -285,6 +300,7 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
       await setDoc(roundRef, {
         submitted: true,
       }, { merge: true });
+      setEditMode(false); // Exit edit mode when submitting
       toast.success('Card submitted! Points now count toward leaderboard.');
     } catch (error) {
       console.error('Error submitting card:', error);
@@ -300,6 +316,7 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
       await setDoc(roundRef, {
         submitted: false,
       }, { merge: true });
+      setEditMode(false); // Reset edit mode when unsubmitting
       toast.success('Card reopened for editing.');
     } catch (error) {
       console.error('Error unsubmitting card:', error);
