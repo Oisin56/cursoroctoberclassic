@@ -241,6 +241,11 @@ function calculateLeaderboard(
       if (roundWinner) {
         entries[roundWinner.player].roundWins++;
       }
+    } else if (round.format === 'Matchplay') {
+      // Use manually selected winner for matchplay
+      if (round.matchplayWinner && entries[round.matchplayWinner]) {
+        entries[round.matchplayWinner].roundWins++;
+      }
     }
 
     // Accumulate side games and birdies/eagles

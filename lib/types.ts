@@ -39,6 +39,7 @@ export interface Round {
   format: RoundFormat;
   ldHoles: number[];
   cttpHoles: number[];
+  matchplayWinner?: string | null; // For matchplay rounds
   course?: Course; // Joined data
 }
 

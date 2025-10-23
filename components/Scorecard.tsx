@@ -215,6 +215,21 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
     debouncedSave(updatedScore.id, updatedScore);
   };
 
+  const updateMatchplayWinner = async (winner: string | null) => {
+    if (!isEditor) return;
+
+    try {
+      const roundRef = doc(db, 'rounds', round.id);
+      await setDoc(roundRef, {
+        matchplayWinner: winner,
+      }, { merge: true });
+      toast.success(winner ? `${winner} selected as winner` : 'Winner cleared');
+    } catch (error) {
+      console.error('Error updating matchplay winner:', error);
+      toast.error('Failed to update winner');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Course Header */}
@@ -444,6 +459,44 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
           </div>
         </div>
       </div>
+
+      {/* Matchplay Winner Selection */}
+      {round.format === 'Matchplay' && isEditor && (
+        <div className="bg-secondary rounded-lg p-4 border border-border">
+          <h3 className="text-lg font-semibold mb-3">Matchplay Winner Selection</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Select the winner of this matchplay round to award +10 points on the leaderboard.
+          </p>
+          <div className="flex gap-3 flex-wrap">
+            {players.map(player => (
+              <button
+                key={player}
+                onClick={() => updateMatchplayWinner(player)}
+                className={`px-6 py-3 rounded-lg font-medium transition ${
+                  round.matchplayWinner === player
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background border border-border hover:bg-accent/20'
+                }`}
+              >
+                {player}
+              </button>
+            ))}
+            {round.matchplayWinner && (
+              <button
+                onClick={() => updateMatchplayWinner(null)}
+                className="px-6 py-3 rounded-lg font-medium bg-background border border-border hover:bg-destructive/20 text-muted-foreground"
+              >
+                Clear Winner
+              </button>
+            )}
+          </div>
+          {round.matchplayWinner && (
+            <p className="mt-3 text-sm text-primary">
+              Winner: <strong>{round.matchplayWinner}</strong> (+10 points)
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
