@@ -49,15 +49,17 @@ export async function seedDatabase(players: string[] = ['Oisin', 'Neil']) {
       updatedAt: serverTimestamp(),
     });
 
-    // Create courses
+    // Create courses with blank hole data
     for (const course of coursesData) {
       const courseRef = doc(db, 'courses', course.id);
+      console.log('Seeding course:', course.id, 'with', course.holes.length, 'blank holes');
       await setDoc(courseRef, {
         name: course.name,
         location: course.location,
         holes: course.holes,
       });
     }
+    console.log('All courses seeded with blank hole data (no par/SI)');
 
     // Create rounds
     for (const round of roundsData) {

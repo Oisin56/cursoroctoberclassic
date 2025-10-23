@@ -171,15 +171,20 @@ export default function Home() {
       {/* Seed Database Button (Editor Only, Bottom Right) */}
       {isEditor && (
         <div className="fixed bottom-4 right-4">
-          <Button
-            onClick={handleSeedDatabase}
-            variant="secondary"
-            size="sm"
-            disabled={seeding}
-          >
-            <Database className="h-4 w-4 mr-2" />
-            {seeding ? 'Seeding...' : 'Re-seed Data'}
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            <Button
+              onClick={handleSeedDatabase}
+              variant="secondary"
+              size="sm"
+              disabled={seeding}
+            >
+              <Database className="h-4 w-4 mr-2" />
+              {seeding ? 'Clearing & Seeding...' : 'Clear All & Re-seed'}
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              ⚠️ This erases all old course data
+            </span>
+          </div>
         </div>
       )}
 

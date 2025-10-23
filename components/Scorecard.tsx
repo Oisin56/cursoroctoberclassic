@@ -243,10 +243,14 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
         h.number === holeNum ? { ...h, ...updates } : h
       );
       
+      // Update entire document to ensure nested array updates work
       await setDoc(courseRef, {
+        name: course.name,
+        location: course.location,
         holes: updatedHoles,
-      }, { merge: true });
+      });
       
+      console.log('Updated hole data:', { holeNum, updates, updatedHoles });
       toast.success('Course data updated');
     } catch (error) {
       console.error('Error updating course:', error);
