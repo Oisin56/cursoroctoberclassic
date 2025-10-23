@@ -4,14 +4,17 @@ service cloud.firestore {
     
     // Helper function to check if user is the current editor
     function isCurrentEditor(eventId) {
-      let accessDoc = get(/databases/$(database)/documents/events/$(eventId)/controls/access);
-      return request.auth != null && accessDoc.data.currentEditorUid == request.auth.uid;
+      let accessPath = /databases/$(database)/documents/events/$(eventId)/controls/access;
+      return exists(accessPath) && 
+             request.auth != null && 
+             get(accessPath).data.currentEditorUid == request.auth.uid;
     }
     
     // Events collection - read by all, write by editor
     match /events/{eventId} {
       allow read: if true;
       allow write: if isCurrentEditor(eventId);
+      allow create: if request.auth != null;
       
       // Controls subcollection for editor access management
       match /controls/access {
@@ -20,28 +23,33 @@ service cloud.firestore {
         allow write: if request.auth != null && 
                        (request.resource.data.currentEditorUid == request.auth.uid || 
                         request.resource.data.currentEditorUid == null);
+        allow create: if request.auth != null;
       }
     }
     
-    // Courses collection - read by all, write by editor of any event
+    // Courses collection - read by all, write by authenticated editor
     match /courses/{courseId} {
       allow read: if true;
-      // Allow write if user is editor of the october-classic-2025 event
-      allow write: if isCurrentEditor('october-classic-2025');
+      // Allow write if user is authenticated and is the current editor
+      allow write: if request.auth != null && isCurrentEditor('october-classic-2025');
+      // Allow create during seeding
+      allow create: if request.auth != null;
     }
     
     // Rounds collection - read by all, write by editor
     match /rounds/{roundId} {
       allow read: if true;
-      allow write: if isCurrentEditor(resource.data.eventId);
+      allow write: if request.auth != null && isCurrentEditor(resource.data.eventId);
+      allow create: if request.auth != null;
     }
     
     // Scores collection - read by all, write by editor
     match /scores/{scoreId} {
       allow read: if true;
-      allow write: if exists(/databases/$(database)/documents/rounds/$(resource.data.roundId)) &&
+      allow write: if request.auth != null && 
+                     exists(/databases/$(database)/documents/rounds/$(resource.data.roundId)) &&
                      isCurrentEditor(get(/databases/$(database)/documents/rounds/$(resource.data.roundId)).data.eventId);
+      allow create: if request.auth != null;
     }
   }
 }
-
