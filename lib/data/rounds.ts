@@ -55,6 +55,6 @@ export const roundsData: Omit<Round, 'id'>[] = [
     sequence: 7,
     label: 'Day 4',
     date: 'October 26, 2025',
-    format: 'Strokeplay',
+    format: 'Stableford',
   },
 ];
