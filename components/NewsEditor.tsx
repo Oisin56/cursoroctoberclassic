@@ -103,48 +103,31 @@ export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
       {isAdding && (
         <div className="bg-background p-4 rounded-lg border border-border space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Title</label>
+            <label htmlFor="news-title" className="block text-sm font-medium mb-2">Title</label>
             <input
+              id="news-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              onPaste={(e) => {
-                // Explicitly allow paste
-                e.stopPropagation();
-              }}
-              onCopy={(e) => {
-                // Explicitly allow copy
-                e.stopPropagation();
-              }}
-              onCut={(e) => {
-                // Explicitly allow cut
-                e.stopPropagation();
-              }}
               placeholder="e.g., Day 1 Preview: The Battle Begins"
+              autoComplete="off"
+              spellCheck="true"
               className="flex h-11 w-full rounded-md border border-input bg-secondary px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              style={{ WebkitUserSelect: 'text', userSelect: 'text' }}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Body</label>
+            <label htmlFor="news-body" className="block text-sm font-medium mb-2">Body</label>
             <textarea
+              id="news-body"
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              onPaste={(e) => {
-                // Explicitly allow paste
-                e.stopPropagation();
-              }}
-              onCopy={(e) => {
-                // Explicitly allow copy
-                e.stopPropagation();
-              }}
-              onCut={(e) => {
-                // Explicitly allow cut
-                e.stopPropagation();
-              }}
               placeholder="Write your news content here..."
               rows={6}
+              autoComplete="off"
+              spellCheck="true"
               className="w-full px-3 py-2 bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-y text-sm"
-              style={{ minHeight: '150px' }}
+              style={{ minHeight: '150px', WebkitUserSelect: 'text', userSelect: 'text' }}
             />
           </div>
           <div className="flex gap-2">
