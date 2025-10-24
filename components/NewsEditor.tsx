@@ -108,7 +108,12 @@ export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
 
       {/* Add/Edit Form */}
       {isAdding && (
-        <div className="bg-background p-4 rounded-lg border border-border space-y-4">
+        <div 
+          className="bg-background p-4 rounded-lg border border-border space-y-4"
+          onPaste={(e) => {
+            console.log('📋 PASTE EVENT DETECTED on parent div');
+          }}
+        >
           <div>
             <label htmlFor="news-title" className="block text-sm font-medium mb-2">Title</label>
             <input
@@ -117,8 +122,19 @@ export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
               type="text"
               defaultValue=""
               placeholder="e.g., Day 1 Preview: The Battle Begins"
-              autoComplete="off"
-              className="flex h-11 w-full rounded-md border border-input bg-secondary px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onPaste={(e) => {
+                console.log('✅ PASTE EVENT on title input!', e.clipboardData?.getData('text'));
+              }}
+              style={{
+                width: '100%',
+                height: '44px',
+                padding: '8px 12px',
+                fontSize: '14px',
+                backgroundColor: '#1e293b',
+                border: '1px solid #334155',
+                borderRadius: '8px',
+                color: '#f1f5f9',
+              }}
             />
           </div>
           <div>
@@ -128,10 +144,21 @@ export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
               id="news-body"
               defaultValue=""
               placeholder="Write your news content here..."
-              rows={6}
-              autoComplete="off"
-              className="w-full px-3 py-2 bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-y text-sm"
-              style={{ minHeight: '150px' }}
+              rows={8}
+              onPaste={(e) => {
+                console.log('✅ PASTE EVENT on body textarea!', e.clipboardData?.getData('text'));
+              }}
+              style={{
+                width: '100%',
+                minHeight: '200px',
+                padding: '8px 12px',
+                fontSize: '14px',
+                backgroundColor: '#1e293b',
+                border: '1px solid #334155',
+                borderRadius: '8px',
+                color: '#f1f5f9',
+                resize: 'vertical',
+              }}
             />
           </div>
           <div className="flex gap-2">
