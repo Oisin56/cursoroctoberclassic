@@ -108,12 +108,7 @@ export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
 
       {/* Add/Edit Form */}
       {isAdding && (
-        <div 
-          className="bg-background p-4 rounded-lg border border-border space-y-4"
-          onPaste={(e) => {
-            console.log('📋 PASTE EVENT DETECTED on parent div');
-          }}
-        >
+        <div className="bg-background p-4 rounded-lg border border-border space-y-4">
           <div>
             <label htmlFor="news-title" className="block text-sm font-medium mb-2">Title</label>
             <input
@@ -122,9 +117,6 @@ export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
               type="text"
               defaultValue=""
               placeholder="e.g., Day 1 Preview: The Battle Begins"
-              onPaste={(e) => {
-                console.log('✅ PASTE EVENT on title input!', e.clipboardData?.getData('text'));
-              }}
               style={{
                 width: '100%',
                 height: '44px',
@@ -145,9 +137,6 @@ export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
               defaultValue=""
               placeholder="Write your news content here..."
               rows={8}
-              onPaste={(e) => {
-                console.log('✅ PASTE EVENT on body textarea!', e.clipboardData?.getData('text'));
-              }}
               style={{
                 width: '100%',
                 minHeight: '200px',
