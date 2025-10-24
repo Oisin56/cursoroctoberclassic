@@ -337,25 +337,49 @@ function calculateLeaderboard(
 
     // Award round winner based on format
     if (round.format === 'Strokeplay') {
-      const roundWinner = roundScores
+      const scoresWithTotals = roundScores
         .filter(s => Object.keys(s.holes).length > 0)
-        .sort((a, b) => {
-          const aTotal = Object.values(a.holes).reduce((sum, h) => sum + (h.strokes || 0), 0);
-          const bTotal = Object.values(b.holes).reduce((sum, h) => sum + (h.strokes || 0), 0);
-          return aTotal - bTotal;
-        })[0];
-      if (roundWinner) {
-        entries[roundWinner.player].roundWins++;
+        .map(s => ({
+          player: s.player,
+          total: Object.values(s.holes).reduce((sum, h) => sum + (h.strokes || 0), 0)
+        }))
+        .sort((a, b) => a.total - b.total);
+      
+      if (scoresWithTotals.length >= 2) {
+        const lowestScore = scoresWithTotals[0].total;
+        const winners = scoresWithTotals.filter(s => s.total === lowestScore);
+        
+        if (winners.length === 1) {
+          // Clear winner gets 10 points
+          entries[winners[0].player].roundWins++;
+        } else if (winners.length === 2) {
+          // Tie: both get 0.5 wins (which equals 5 points each)
+          winners.forEach(w => {
+            entries[w.player].roundWins += 0.5;
+          });
+        }
       }
     } else if (round.format === 'Stableford') {
-      const roundWinner = roundScores
-        .sort((a, b) => {
-          const aTotal = Object.values(a.holes).reduce((sum, h) => sum + (h.points || 0), 0);
-          const bTotal = Object.values(b.holes).reduce((sum, h) => sum + (h.points || 0), 0);
-          return bTotal - aTotal;
-        })[0];
-      if (roundWinner) {
-        entries[roundWinner.player].roundWins++;
+      const scoresWithTotals = roundScores
+        .map(s => ({
+          player: s.player,
+          total: Object.values(s.holes).reduce((sum, h) => sum + (h.points || 0), 0)
+        }))
+        .sort((a, b) => b.total - a.total);
+      
+      if (scoresWithTotals.length >= 2) {
+        const highestScore = scoresWithTotals[0].total;
+        const winners = scoresWithTotals.filter(s => s.total === highestScore);
+        
+        if (winners.length === 1) {
+          // Clear winner gets 10 points
+          entries[winners[0].player].roundWins++;
+        } else if (winners.length === 2) {
+          // Tie: both get 0.5 wins (which equals 5 points each)
+          winners.forEach(w => {
+            entries[w.player].roundWins += 0.5;
+          });
+        }
       }
     } else if (round.format === 'Matchplay') {
       // Use manually selected winner for matchplay
