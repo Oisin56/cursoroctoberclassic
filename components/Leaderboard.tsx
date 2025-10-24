@@ -280,7 +280,19 @@ function calculateLeaderboard(
     });
 
     // Award front9 winner based on format
-    if (round.format === 'Stableford') {
+    if (round.format === 'Matchplay') {
+      // Matchplay: use manual selection
+      if (round.matchplayFront9Winner) {
+        if (round.matchplayFront9Winner === 'halved') {
+          // Both players get 0.5 wins (0.5 * 3 = 1.5 points each)
+          event.players.forEach(player => {
+            entries[player].front9Wins += 0.5;
+          });
+        } else if (entries[round.matchplayFront9Winner]) {
+          entries[round.matchplayFront9Winner].front9Wins++;
+        }
+      }
+    } else if (round.format === 'Stableford') {
       // Stableford: highest points wins
       const front9Winner = Object.entries(front9Totals)
         .filter(([_, total]) => total > 0)
@@ -293,7 +305,7 @@ function calculateLeaderboard(
         }
       }
     } else {
-      // Strokeplay/Matchplay: lowest strokes wins
+      // Strokeplay: lowest strokes wins
       const front9Winner = Object.entries(front9Totals)
         .filter(([_, total]) => total > 0)
         .sort((a, b) => a[1] - b[1])[0]; // Ascending for strokes
@@ -308,7 +320,19 @@ function calculateLeaderboard(
 
     // Award back9 winner (only for 18-hole rounds) based on format
     if (course.holes.length === 18) {
-      if (round.format === 'Stableford') {
+      if (round.format === 'Matchplay') {
+        // Matchplay: use manual selection
+        if (round.matchplayBack9Winner) {
+          if (round.matchplayBack9Winner === 'halved') {
+            // Both players get 0.5 wins (0.5 * 3 = 1.5 points each)
+            event.players.forEach(player => {
+              entries[player].back9Wins += 0.5;
+            });
+          } else if (entries[round.matchplayBack9Winner]) {
+            entries[round.matchplayBack9Winner].back9Wins++;
+          }
+        }
+      } else if (round.format === 'Stableford') {
         // Stableford: highest points wins
         const back9Winner = Object.entries(back9Totals)
           .filter(([_, total]) => total > 0)
@@ -321,7 +345,7 @@ function calculateLeaderboard(
           }
         }
       } else {
-        // Strokeplay/Matchplay: lowest strokes wins
+        // Strokeplay: lowest strokes wins
         const back9Winner = Object.entries(back9Totals)
           .filter(([_, total]) => total > 0)
           .sort((a, b) => a[1] - b[1])[0]; // Ascending for strokes
@@ -383,8 +407,15 @@ function calculateLeaderboard(
       }
     } else if (round.format === 'Matchplay') {
       // Use manually selected winner for matchplay
-      if (round.matchplayWinner && entries[round.matchplayWinner]) {
-        entries[round.matchplayWinner].roundWins++;
+      if (round.matchplayWinner) {
+        if (round.matchplayWinner === 'halved') {
+          // Both players get 0.5 wins (0.5 * 10 = 5 points each)
+          event.players.forEach(player => {
+            entries[player].roundWins += 0.5;
+          });
+        } else if (entries[round.matchplayWinner]) {
+          entries[round.matchplayWinner].roundWins++;
+        }
       }
     }
 

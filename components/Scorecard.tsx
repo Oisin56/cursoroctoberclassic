@@ -263,10 +263,43 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
       await setDoc(roundRef, {
         matchplayWinner: winner,
       }, { merge: true });
-      toast.success(winner ? `${winner} selected as winner` : 'Winner cleared');
+      const message = winner === 'halved' ? 'Match halved' : winner ? `${winner} selected as winner` : 'Winner cleared';
+      toast.success(message);
     } catch (error) {
       console.error('Error updating matchplay winner:', error);
       toast.error('Failed to update winner');
+    }
+  };
+
+  const updateMatchplayFront9Winner = async (winner: string | null) => {
+    if (!isEditor) return;
+
+    try {
+      const roundRef = doc(db, 'rounds', round.id);
+      await setDoc(roundRef, {
+        matchplayFront9Winner: winner,
+      }, { merge: true });
+      const message = winner === 'halved' ? 'Front 9 halved' : winner ? `${winner} wins Front 9` : 'Front 9 winner cleared';
+      toast.success(message);
+    } catch (error) {
+      console.error('Error updating front 9 winner:', error);
+      toast.error('Failed to update front 9 winner');
+    }
+  };
+
+  const updateMatchplayBack9Winner = async (winner: string | null) => {
+    if (!isEditor) return;
+
+    try {
+      const roundRef = doc(db, 'rounds', round.id);
+      await setDoc(roundRef, {
+        matchplayBack9Winner: winner,
+      }, { merge: true });
+      const message = winner === 'halved' ? 'Back 9 halved' : winner ? `${winner} wins Back 9` : 'Back 9 winner cleared';
+      toast.success(message);
+    } catch (error) {
+      console.error('Error updating back 9 winner:', error);
+      toast.error('Failed to update back 9 winner');
     }
   };
 
@@ -651,39 +684,148 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
 
       {/* Matchplay Winner Selection */}
       {round.format === 'Matchplay' && isEditor && (
-        <div className="bg-secondary rounded-lg p-4 border border-border">
-          <h3 className="text-lg font-semibold mb-3">Matchplay Winner Selection</h3>
+        <div className="bg-secondary rounded-lg p-4 border border-border space-y-6">
+          <h3 className="text-lg font-semibold mb-1">Matchplay Results</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Select the winner of this matchplay round to award +10 points on the leaderboard.
+            Select winners for each section or choose &quot;Halve&quot; if tied.
           </p>
-          <div className="flex gap-3 flex-wrap">
-            {players.map(player => (
+
+          {/* Front 9 Winner */}
+          <div>
+            <h4 className="font-medium mb-2 text-sm">Front 9 Winner (3 pts, or 1.5 pts each if halved)</h4>
+            <div className="flex gap-2 flex-wrap">
+              {players.map(player => (
+                <button
+                  key={player}
+                  onClick={() => updateMatchplayFront9Winner(player)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    round.matchplayFront9Winner === player
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-background border border-border hover:bg-accent/20'
+                  }`}
+                >
+                  {player}
+                </button>
+              ))}
               <button
-                key={player}
-                onClick={() => updateMatchplayWinner(player)}
-                className={`px-6 py-3 rounded-lg font-medium transition ${
-                  round.matchplayWinner === player
-                    ? 'bg-primary text-primary-foreground'
+                onClick={() => updateMatchplayFront9Winner('halved')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                  round.matchplayFront9Winner === 'halved'
+                    ? 'bg-accent text-accent-foreground'
                     : 'bg-background border border-border hover:bg-accent/20'
                 }`}
               >
-                {player}
+                Halve
               </button>
-            ))}
-            {round.matchplayWinner && (
-              <button
-                onClick={() => updateMatchplayWinner(null)}
-                className="px-6 py-3 rounded-lg font-medium bg-background border border-border hover:bg-destructive/20 text-muted-foreground"
-              >
-                Clear Winner
-              </button>
+              {round.matchplayFront9Winner && (
+                <button
+                  onClick={() => updateMatchplayFront9Winner(null)}
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-background border border-border hover:bg-destructive/20 text-muted-foreground"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            {round.matchplayFront9Winner && (
+              <p className="mt-2 text-xs text-primary">
+                {round.matchplayFront9Winner === 'halved' 
+                  ? 'Halved: +1.5 pts each' 
+                  : `Winner: ${round.matchplayFront9Winner} (+3 pts)`}
+              </p>
             )}
           </div>
-          {round.matchplayWinner && (
-            <p className="mt-3 text-sm text-primary">
-              Winner: <strong>{round.matchplayWinner}</strong> (+10 points)
-            </p>
+
+          {/* Back 9 Winner (only for 18-hole courses) */}
+          {holes.length === 18 && (
+            <div>
+              <h4 className="font-medium mb-2 text-sm">Back 9 Winner (3 pts, or 1.5 pts each if halved)</h4>
+              <div className="flex gap-2 flex-wrap">
+                {players.map(player => (
+                  <button
+                    key={player}
+                    onClick={() => updateMatchplayBack9Winner(player)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                      round.matchplayBack9Winner === player
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background border border-border hover:bg-accent/20'
+                    }`}
+                  >
+                    {player}
+                  </button>
+                ))}
+                <button
+                  onClick={() => updateMatchplayBack9Winner('halved')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    round.matchplayBack9Winner === 'halved'
+                      ? 'bg-accent text-accent-foreground'
+                      : 'bg-background border border-border hover:bg-accent/20'
+                  }`}
+                >
+                  Halve
+                </button>
+                {round.matchplayBack9Winner && (
+                  <button
+                    onClick={() => updateMatchplayBack9Winner(null)}
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-background border border-border hover:bg-destructive/20 text-muted-foreground"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              {round.matchplayBack9Winner && (
+                <p className="mt-2 text-xs text-primary">
+                  {round.matchplayBack9Winner === 'halved' 
+                    ? 'Halved: +1.5 pts each' 
+                    : `Winner: ${round.matchplayBack9Winner} (+3 pts)`}
+                </p>
+              )}
+            </div>
           )}
+
+          {/* Overall Match Winner */}
+          <div>
+            <h4 className="font-medium mb-2 text-sm">Overall Match Winner (10 pts, or 5 pts each if halved)</h4>
+            <div className="flex gap-2 flex-wrap">
+              {players.map(player => (
+                <button
+                  key={player}
+                  onClick={() => updateMatchplayWinner(player)}
+                  className={`px-6 py-3 rounded-lg font-medium transition ${
+                    round.matchplayWinner === player
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-background border border-border hover:bg-accent/20'
+                  }`}
+                >
+                  {player}
+                </button>
+              ))}
+              <button
+                onClick={() => updateMatchplayWinner('halved')}
+                className={`px-6 py-3 rounded-lg font-medium transition ${
+                  round.matchplayWinner === 'halved'
+                    ? 'bg-accent text-accent-foreground'
+                    : 'bg-background border border-border hover:bg-accent/20'
+                }`}
+              >
+                Halve Match
+              </button>
+              {round.matchplayWinner && (
+                <button
+                  onClick={() => updateMatchplayWinner(null)}
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-background border border-border hover:bg-destructive/20 text-muted-foreground"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            {round.matchplayWinner && (
+              <p className="mt-2 text-sm text-primary">
+                {round.matchplayWinner === 'halved' 
+                  ? 'Match Halved: +5 pts each' 
+                  : `Winner: ${round.matchplayWinner} (+10 pts)`}
+              </p>
+            )}
+          </div>
         </div>
       )}
 

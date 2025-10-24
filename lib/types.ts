@@ -41,7 +41,9 @@ export interface Round {
   label: string;
   date: string; // e.g., "October 23, 2025"
   format: RoundFormat;
-  matchplayWinner?: string | null; // For matchplay rounds
+  matchplayWinner?: string | null; // For matchplay rounds - can be player name or 'halved'
+  matchplayFront9Winner?: string | null; // For matchplay front 9 - can be player name or 'halved'
+  matchplayBack9Winner?: string | null; // For matchplay back 9 - can be player name or 'halved'
   submitted?: boolean; // Whether scores are final and count toward leaderboard
   course?: Course; // Joined data
 }
