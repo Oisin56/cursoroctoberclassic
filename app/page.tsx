@@ -16,6 +16,7 @@ import { Leaderboard } from '@/components/Leaderboard';
 import { PlayerBios } from '@/components/PlayerBios';
 import { NewsDisplay } from '@/components/NewsDisplay';
 import { NewsEditor } from '@/components/NewsEditor';
+import { AboutTheClassic } from '@/components/AboutTheClassic';
 import { Button } from '@/components/ui/Button';
 import { seedDatabase } from '@/lib/seed';
 import { Trophy, Database } from 'lucide-react';
@@ -154,6 +155,13 @@ export default function Home() {
             >
               Players
             </TabsTrigger>
+            <TabsTrigger
+              value="about"
+              isActive={activeTab === 'about'}
+              onClick={() => setActiveTab('about')}
+            >
+              About
+            </TabsTrigger>
             {rounds.map((round) => (
               <TabsTrigger
                 key={round.id}
@@ -179,6 +187,10 @@ export default function Home() {
 
           <TabsContent value="players" isActive={activeTab === 'players'}>
             <PlayerBios />
+          </TabsContent>
+
+          <TabsContent value="about" isActive={activeTab === 'about'}>
+            <AboutTheClassic />
           </TabsContent>
 
           {rounds.map((round) => (

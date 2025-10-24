@@ -118,9 +118,14 @@ export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
+              onPaste={(e) => {
+                // Ensure paste works
+                e.stopPropagation();
+              }}
               placeholder="Write your news content here..."
               rows={6}
-              className="w-full px-3 py-2 bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+              className="w-full px-3 py-2 bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-y"
+              style={{ minHeight: '150px' }}
             />
           </div>
           <div className="flex gap-2">
