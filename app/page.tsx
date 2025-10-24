@@ -7,11 +7,15 @@ import { useEditorLock } from '@/lib/hooks/useEditorLock';
 import { useEvent } from '@/lib/hooks/useEvent';
 import { useRounds } from '@/lib/hooks/useRounds';
 import { useScores } from '@/lib/hooks/useScores';
+import { useNews } from '@/lib/hooks/useNews';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import { EditorPinModal } from '@/components/EditorPinModal';
 import { EditorControls } from '@/components/EditorControls';
 import { Scorecard } from '@/components/Scorecard';
 import { Leaderboard } from '@/components/Leaderboard';
+import { PlayerBios } from '@/components/PlayerBios';
+import { NewsDisplay } from '@/components/NewsDisplay';
+import { NewsEditor } from '@/components/NewsEditor';
 import { Button } from '@/components/ui/Button';
 import { seedDatabase } from '@/lib/seed';
 import { Trophy, Database } from 'lucide-react';
@@ -27,6 +31,7 @@ export default function Home() {
   const { isEditor, loading: authLoading, claimLock, releaseLock } = useEditorLock(EVENT_ID);
   const { event, loading: eventLoading } = useEvent(EVENT_ID);
   const { rounds, loading: roundsLoading } = useRounds(EVENT_ID);
+  const { news, loading: newsLoading } = useNews(EVENT_ID);
 
   const handleSeedDatabase = async () => {
     if (!isEditor) {
@@ -126,7 +131,13 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* News Section - Prominent */}
+        <NewsDisplay news={news} />
+        
+        {/* News Editor - Only for editors */}
+        {isEditor && <NewsEditor eventId={EVENT_ID} news={news} isEditor={isEditor} />}
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger
@@ -135,6 +146,13 @@ export default function Home() {
               onClick={() => setActiveTab('leaderboard')}
             >
               Leaderboard
+            </TabsTrigger>
+            <TabsTrigger
+              value="players"
+              isActive={activeTab === 'players'}
+              onClick={() => setActiveTab('players')}
+            >
+              Players
             </TabsTrigger>
             {rounds.map((round) => (
               <TabsTrigger
@@ -157,6 +175,10 @@ export default function Home() {
               rounds={rounds}
               isEditor={isEditor}
             />
+          </TabsContent>
+
+          <TabsContent value="players" isActive={activeTab === 'players'}>
+            <PlayerBios />
           </TabsContent>
 
           {rounds.map((round) => (

@@ -25,6 +25,7 @@ firebase deploy --only firestore:rules
 - Added `exists()` check before `get()` to prevent permission errors
 - Added explicit `allow create` permissions for initial seeding
 - Fixed courses collection to properly check editor status
+- **NEW**: Added news collection rules for News & Updates feature
 
 ## After Deploying Rules
 1. Hard refresh your app (Cmd+Shift+R)

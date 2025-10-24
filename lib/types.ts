@@ -81,3 +81,12 @@ export interface LeaderboardEntry {
   total: number;
 }
 
+export interface NewsEntry {
+  id: string;
+  eventId: string;
+  title: string;
+  body: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
