@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { collection, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { NewsEntry } from '@/lib/types';
@@ -17,14 +17,18 @@ interface NewsEditorProps {
 export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
   const [saving, setSaving] = useState(false);
+  
+  const titleRef = useRef<HTMLInputElement>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   if (!isEditor) return null;
 
   const handleSave = async () => {
-    if (!title.trim() || !body.trim()) {
+    const title = titleRef.current?.value.trim() || '';
+    const body = bodyRef.current?.value.trim() || '';
+    
+    if (!title || !body) {
       toast.error('Title and body are required');
       return;
     }
@@ -35,8 +39,8 @@ export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
       
       await setDoc(newsRef, {
         eventId,
-        title: title.trim(),
-        body: body.trim(),
+        title,
+        body,
         createdAt: editingId ? news.find(n => n.id === editingId)?.createdAt : serverTimestamp(),
         updatedAt: serverTimestamp(),
       }, { merge: true });
@@ -44,8 +48,8 @@ export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
       toast.success(editingId ? 'News updated!' : 'News posted!');
       setIsAdding(false);
       setEditingId(null);
-      setTitle('');
-      setBody('');
+      if (titleRef.current) titleRef.current.value = '';
+      if (bodyRef.current) bodyRef.current.value = '';
     } catch (error) {
       console.error('Error saving news:', error);
       toast.error('Failed to save news');
@@ -56,9 +60,12 @@ export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
 
   const handleEdit = (entry: NewsEntry) => {
     setEditingId(entry.id);
-    setTitle(entry.title);
-    setBody(entry.body);
     setIsAdding(true);
+    // Use setTimeout to ensure the inputs are rendered before setting values
+    setTimeout(() => {
+      if (titleRef.current) titleRef.current.value = entry.title;
+      if (bodyRef.current) bodyRef.current.value = entry.body;
+    }, 0);
   };
 
   const handleDelete = async (id: string) => {
@@ -76,8 +83,8 @@ export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setTitle('');
-    setBody('');
+    if (titleRef.current) titleRef.current.value = '';
+    if (bodyRef.current) bodyRef.current.value = '';
   };
 
   return (
@@ -105,29 +112,26 @@ export function NewsEditor({ eventId, news, isEditor }: NewsEditorProps) {
           <div>
             <label htmlFor="news-title" className="block text-sm font-medium mb-2">Title</label>
             <input
+              ref={titleRef}
               id="news-title"
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              defaultValue=""
               placeholder="e.g., Day 1 Preview: The Battle Begins"
               autoComplete="off"
-              spellCheck="true"
               className="flex h-11 w-full rounded-md border border-input bg-secondary px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              style={{ WebkitUserSelect: 'text', userSelect: 'text' }}
             />
           </div>
           <div>
             <label htmlFor="news-body" className="block text-sm font-medium mb-2">Body</label>
             <textarea
+              ref={bodyRef}
               id="news-body"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
+              defaultValue=""
               placeholder="Write your news content here..."
               rows={6}
               autoComplete="off"
-              spellCheck="true"
               className="w-full px-3 py-2 bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-y text-sm"
-              style={{ minHeight: '150px', WebkitUserSelect: 'text', userSelect: 'text' }}
+              style={{ minHeight: '150px' }}
             />
           </div>
           <div className="flex gap-2">
