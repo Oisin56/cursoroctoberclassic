@@ -690,50 +690,52 @@ export function Scorecard({ round, scores, players, isEditor }: ScorecardProps) 
             Select winners for each section or choose &quot;Halve&quot; if tied.
           </p>
 
-          {/* Front 9 Winner */}
-          <div>
-            <h4 className="font-medium mb-2 text-sm">Front 9 Winner (3 pts, or 1.5 pts each if halved)</h4>
-            <div className="flex gap-2 flex-wrap">
-              {players.map(player => (
+          {/* Front 9 Winner (only for 18-hole courses) */}
+          {holes.length === 18 && (
+            <div>
+              <h4 className="font-medium mb-2 text-sm">Front 9 Winner (3 pts, or 1.5 pts each if halved)</h4>
+              <div className="flex gap-2 flex-wrap">
+                {players.map(player => (
+                  <button
+                    key={player}
+                    onClick={() => updateMatchplayFront9Winner(player)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                      round.matchplayFront9Winner === player
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background border border-border hover:bg-accent/20'
+                    }`}
+                  >
+                    {player}
+                  </button>
+                ))}
                 <button
-                  key={player}
-                  onClick={() => updateMatchplayFront9Winner(player)}
+                  onClick={() => updateMatchplayFront9Winner('halved')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                    round.matchplayFront9Winner === player
-                      ? 'bg-primary text-primary-foreground'
+                    round.matchplayFront9Winner === 'halved'
+                      ? 'bg-accent text-accent-foreground'
                       : 'bg-background border border-border hover:bg-accent/20'
                   }`}
                 >
-                  {player}
+                  Halve
                 </button>
-              ))}
-              <button
-                onClick={() => updateMatchplayFront9Winner('halved')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                  round.matchplayFront9Winner === 'halved'
-                    ? 'bg-accent text-accent-foreground'
-                    : 'bg-background border border-border hover:bg-accent/20'
-                }`}
-              >
-                Halve
-              </button>
+                {round.matchplayFront9Winner && (
+                  <button
+                    onClick={() => updateMatchplayFront9Winner(null)}
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-background border border-border hover:bg-destructive/20 text-muted-foreground"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
               {round.matchplayFront9Winner && (
-                <button
-                  onClick={() => updateMatchplayFront9Winner(null)}
-                  className="px-4 py-2 rounded-lg text-sm font-medium bg-background border border-border hover:bg-destructive/20 text-muted-foreground"
-                >
-                  Clear
-                </button>
+                <p className="mt-2 text-xs text-primary">
+                  {round.matchplayFront9Winner === 'halved' 
+                    ? 'Halved: +1.5 pts each' 
+                    : `Winner: ${round.matchplayFront9Winner} (+3 pts)`}
+                </p>
               )}
             </div>
-            {round.matchplayFront9Winner && (
-              <p className="mt-2 text-xs text-primary">
-                {round.matchplayFront9Winner === 'halved' 
-                  ? 'Halved: +1.5 pts each' 
-                  : `Winner: ${round.matchplayFront9Winner} (+3 pts)`}
-              </p>
-            )}
-          </div>
+          )}
 
           {/* Back 9 Winner (only for 18-hole courses) */}
           {holes.length === 18 && (

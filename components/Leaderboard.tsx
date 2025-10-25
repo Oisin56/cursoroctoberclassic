@@ -279,41 +279,43 @@ function calculateLeaderboard(
       back9Totals[score.player] = back9;
     });
 
-    // Award front9 winner based on format
-    if (round.format === 'Matchplay') {
-      // Matchplay: use manual selection
-      if (round.matchplayFront9Winner) {
-        if (round.matchplayFront9Winner === 'halved') {
-          // Both players get 0.5 wins (0.5 * 3 = 1.5 points each)
-          event.players.forEach(player => {
-            entries[player].front9Wins += 0.5;
-          });
-        } else if (entries[round.matchplayFront9Winner]) {
-          entries[round.matchplayFront9Winner].front9Wins++;
+    // Award front9 winner based on format (only for 18-hole courses)
+    if (course.holes.length === 18) {
+      if (round.format === 'Matchplay') {
+        // Matchplay: use manual selection
+        if (round.matchplayFront9Winner) {
+          if (round.matchplayFront9Winner === 'halved') {
+            // Both players get 0.5 wins (0.5 * 3 = 1.5 points each)
+            event.players.forEach(player => {
+              entries[player].front9Wins += 0.5;
+            });
+          } else if (entries[round.matchplayFront9Winner]) {
+            entries[round.matchplayFront9Winner].front9Wins++;
+          }
         }
-      }
-    } else if (round.format === 'Stableford') {
-      // Stableford: highest points wins
-      const front9Winner = Object.entries(front9Totals)
-        .filter(([_, total]) => total > 0)
-        .sort((a, b) => b[1] - a[1])[0]; // Descending for points
-      if (front9Winner && front9Totals[front9Winner[0]] > 0) {
-        const highestFront9 = front9Winner[1];
-        const winners = Object.entries(front9Totals).filter(([_, t]) => t === highestFront9);
-        if (winners.length === 1) {
-          entries[front9Winner[0]].front9Wins++;
+      } else if (round.format === 'Stableford') {
+        // Stableford: highest points wins
+        const front9Winner = Object.entries(front9Totals)
+          .filter(([_, total]) => total > 0)
+          .sort((a, b) => b[1] - a[1])[0]; // Descending for points
+        if (front9Winner && front9Totals[front9Winner[0]] > 0) {
+          const highestFront9 = front9Winner[1];
+          const winners = Object.entries(front9Totals).filter(([_, t]) => t === highestFront9);
+          if (winners.length === 1) {
+            entries[front9Winner[0]].front9Wins++;
+          }
         }
-      }
-    } else {
-      // Strokeplay: lowest strokes wins
-      const front9Winner = Object.entries(front9Totals)
-        .filter(([_, total]) => total > 0)
-        .sort((a, b) => a[1] - b[1])[0]; // Ascending for strokes
-      if (front9Winner && front9Totals[front9Winner[0]] > 0) {
-        const lowestFront9 = front9Winner[1];
-        const winners = Object.entries(front9Totals).filter(([_, t]) => t === lowestFront9);
-        if (winners.length === 1) {
-          entries[front9Winner[0]].front9Wins++;
+      } else {
+        // Strokeplay: lowest strokes wins
+        const front9Winner = Object.entries(front9Totals)
+          .filter(([_, total]) => total > 0)
+          .sort((a, b) => a[1] - b[1])[0]; // Ascending for strokes
+        if (front9Winner && front9Totals[front9Winner[0]] > 0) {
+          const lowestFront9 = front9Winner[1];
+          const winners = Object.entries(front9Totals).filter(([_, t]) => t === lowestFront9);
+          if (winners.length === 1) {
+            entries[front9Winner[0]].front9Wins++;
+          }
         }
       }
     }
